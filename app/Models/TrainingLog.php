@@ -17,9 +17,9 @@ class TrainingLog extends Model
      */
     protected $fillable = [
         'user_id', // user id who created this training log
-        // 'status', // status from constant TRAINING_LOG_STATUS_CARDIO | TRAINING_LOG_STATUS_RESISTANCE
+        'status', // status from constant TRAINING_LOG_STATUS_CARDIO | TRAINING_LOG_STATUS_RESISTANCE
         'date', // training date
-        // 'workout_name', // training title
+        'workout_name', // training title
         'training_goal_id', // training goal id
         'training_goal_custom', // set this key when training goal is customized.
         'training_goal_custom_id',
@@ -30,6 +30,7 @@ class TrainingLog extends Model
         'targeted_hr', // Store Targeted HR
         'notes', // other remark
         'exercise', // store json data
+        'additional_exercise', // store json data
         'RPE', // cycle only
         'is_log', // if true then show log else show workouts only
         'latitude', // log latitude
@@ -65,7 +66,7 @@ class TrainingLog extends Model
             'workout_name' => $once . 'required',
             // "training_goal_id" => $once. 'required',
             'training_intensity_id' => $once . 'required',
-            'exercise' => $once . 'required',
+            // 'exercise' => $once . 'required',
             // "training_activity_id" => 'required',
         ];
 

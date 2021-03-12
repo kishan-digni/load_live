@@ -46,7 +46,7 @@ $router->group([/* 'prefix' => 'api' */], function () use ($router) {
             $router->post('save-generated-calculation', "TrainingLogController@saveGeneratedCalculations");
             $router->get('save-generated-calculation-resistance-log/{id}', "TrainingLogController@saveGeneratedCalculationsResistanceLog");
             $router->put('complete-training-log/{id}', "TrainingLogController@completeTrainingLog");
-            $router->put('update-confirmation-training-log/{id}', "TrainingLogController@updateConfirmationTrainingLog");
+            $router->put('update-confirmation-resistance-training-log/{id}', "TrainingLogController@updateConfirmationTrainingLog");
 
             /** Generate Training Summary Page API */
             $router->post('get-training-log-summary-details', "LogSummary\SummaryCalculationController@generateSummaryDetails");

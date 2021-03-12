@@ -1171,7 +1171,6 @@ class TrainingLogController extends Controller
         }
         return $grand_total;
     }
-    /** End Modified */
 
     public function updateConfirmationTrainingLog($id, Request $request)
     {
@@ -1183,46 +1182,12 @@ class TrainingLogController extends Controller
             'first' => true,
         ]);
 
-        $total_duration = $this->totalDurationMinuteNew($input);
-        $input['total_duration'] = gmdate('H:i:s', $total_duration);
-
-        // dd($input);
-        $total_duration = $this->totalDurationMinuteNew($input);
-
-        /* if (!!!isset($trainingLogCheck)) {
+        if (!!!isset($trainingLogCheck)) {
         return $this->sendBadRequest(null, __('validation.common.details_not_found', ['module' => $this->moduleName]));
-        } */
-
-        /** validation for training log details */
-        /* $validator = TrainingLog::validation($input);
-        if ($validator->fails()) {
-        return $this->sendBadRequest(null, $validator->errors()->first());
-        } */
-
-        /** check for activity validation */
-        /* if ($input['status'] == TRAINING_LOG_STATUS_CARDIO && !isset($input['training_activity_id'])) {
-        return $this->sendBadRequest(null, __("validation.common.select_any_value", ['module' => 'activity']));
-        } */
-
-        /** convert date time to utc format */
-        if (isset($input['date'])) {
-            // $input['date'] = $this->utcToDateTimeFormat($input['date']);
-            // $input['date'] = $this->isoToUTCFormat($input['date']);
         }
-
-        /** create training log */
-        $trainingLog = $this->trainingLogRepository->updateRich($input, $id);
-
-        /** from app first set flag for save and then click on logit button with save template flag then after save workout template */
-        /** when user save template then store log into saved_workout table */
-        if (isset($input['is_saved_workout']) && $input['is_saved_workout'] == true) {
-            $template = $this->saveWorkoutAsTemplate($trainingLog);
-            if (isset($template) && $template['flag'] == false) {
-                return $this->sendBadRequest(null, $template['message']);
-            }
-            // return $this->sendSuccessResponse( $template['data'], $template['message']);
-        }
-
+        $data['total_duration'] =  json_encode($request->total_duration);
+        $data['additional_exercise'] =  json_encode($request->exercise);
+        $trainingLog = $this->trainingLogRepository->updateRich($data, $id);
         /** give return data with relation */
         $returnDetailsRequest = [
             'id' => $trainingLog->id,
@@ -1231,7 +1196,7 @@ class TrainingLogController extends Controller
         ];
         $trainingLog = $this->trainingLogRepository->getDetailsByInput($returnDetailsRequest);
         $trainingLog = $this->getLogDetailsById($trainingLog->id);
-
         return $this->sendSuccessResponse($trainingLog, __("validation.common.updated", ["module" => $this->moduleName]));
     }
+    /** End Modified */
 }
