@@ -96,12 +96,41 @@ class ResistanceCalculationController extends Controller
                 $trainingLogWithExerciseLink[$key]['library_id'] = $value->library_id;
                 $completed_volume += $this->getCompletedVolume($value->data, $trainingLog['training_intensity']['name']);
             }
+            foreach ($trainingLog['exercise'] as $key => $value) {
+                $targated_volume += $this->getTargetedVolume($value['data'], $trainingLog['training_intensity']['name']);
+            }
             $trainingLog['targated_volume'] = $targated_volume;
             $trainingLog['completed_volume'] = $completed_volume;
             $trainingLog['exercise'] = $trainingLogWithExerciseLink;
             // $trainingLog['additional_exercise'] = json_encode($additional_exercise);
             return $trainingLog;
         // END MAIN
+    }
+    public function getTargetedVolume($params, $training_intensity)
+    {
+        $grand_total = 0;
+        foreach ($params as $key => $value) {
+            if ($value['reps'] != '') {
+                $grand_total += (int) $value['weight'] * (int) $value['reps'];
+            } else {
+                $duration = explode(':', $value['duration']);
+                $minutes = $duration[0] ? $duration[0] : 0;
+                $secs = $duration[1] ? $duration[1] : 0;
+                $totalSecs = ($minutes * 60) + $secs;
+                if ($training_intensity == "Low") {
+                    $grand_total += $totalSecs / 4;
+                } elseif ($training_intensity == "Moderately-low") {
+                    $grand_total += $totalSecs / 5;
+                } elseif ($training_intensity == "Moderate") {
+                    $grand_total += $totalSecs / 6;
+                } elseif ($training_intensity == "Moderately-high") {
+                    $grand_total += $totalSecs / 4;
+                } elseif ($training_intensity == "High") {
+                    $grand_total += $totalSecs / 2;
+                }
+            }
+        }
+        return $grand_total;
     }
     public function getCompletedVolume($params, $training_intensity)
     {

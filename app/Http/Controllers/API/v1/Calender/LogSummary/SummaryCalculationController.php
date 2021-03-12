@@ -91,6 +91,7 @@ class SummaryCalculationController extends Controller
             /** Else Means no Activity ( RESiSTANCE TRAINING LOG )*/
             $response = app(ResistanceCalculationController::class)->generateCalculationForResistance($trainingLog, $activityCode);
             $response['additional_exercise'] = json_decode($response['additional_exercise']);
+            $response['total_duration'] = json_decode($response['total_duration']);
             $summaryResponse = array_merge($summaryResponse, $response);
         }
         // dd('check', $summaryResponse, $trainingLog);
