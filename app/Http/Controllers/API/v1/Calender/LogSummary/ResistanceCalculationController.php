@@ -96,12 +96,27 @@ class ResistanceCalculationController extends Controller
         foreach ($trainingLog['exercise'] as $key => $value) {
             $targated_volume += $this->getTargetedVolume($value['data'], $trainingLog['training_intensity']['name']);
         }
+
+        $allVolume = [];
+        $allRepsCount = 0;
+        foreach ($trainingLog['exercise'] as $key => $exercises) {
+            /** before any change please look at the exercises object */
+            foreach ($exercises['data'] as $key => $exercise) {
+                $allVolume[] = round((((float) $exercise['weight']) * ((float) $exercise['reps'])), 2);
+                $allRepsCount += (float) $exercise['reps'];
+            }
+        }
+        // wrong calculation applied here,
+        $trainingLog['total_volume'] = array_sum($allVolume);
+        $trainingLog['total_volume_unit'] = $this->total_volume_unit;
+        /** maintain reminder here */
+        $trainingLog['average_weight_lifted'] = round(($trainingLog['total_volume'] / $allRepsCount), 2);
+        $trainingLog['average_weight_lifted_unit'] = $this->average_weight_lifted_unit;
+
         $trainingLog['targated_volume'] = $targated_volume;
         $trainingLog['completed_volume'] = $completed_volume;
         $trainingLog['completed_volume_unit'] = $this->total_volume_unit;
         $trainingLog['exercise'] = $trainingLogWithExerciseLink;
-        $trainingLog['total_volume_unit'] = $this->total_volume_unit;
-        $trainingLog['average_weight_lifted_unit'] = $this->average_weight_lifted_unit;
         // $trainingLog['additional_exercise'] = json_encode($additional_exercise);
         return $trainingLog;
         // END MAIN
