@@ -2,10 +2,8 @@
 
 namespace App\Http\Controllers\API\v1\Calender\LogSummary;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Supports\SummaryCalculationTrait;
-use Illuminate\Support\Arr;
 
 class ResistanceCalculationController extends Controller
 {
@@ -16,13 +14,12 @@ class ResistanceCalculationController extends Controller
     public function __construct()
     {
         $this->total_volume_unit = "kg";
-        $this->average_weight_lifted_unit = "kg";
+        $this->average_weight_lifted_unit = "kg/rep";
     }
     /**
      * How to get Average Weight Lifted:
      * Total Volume / All the reps in the training log.
      */
-
 
     /**
      * CYCLE ( IN | OUT )
@@ -81,29 +78,32 @@ class ResistanceCalculationController extends Controller
 
     /**
      * Modified By : Kishan J Gareja
-    * Modified Date : 12-Mar-2021
+     * Modified Date : 12-Mar-2021
      * CYCLE ( IN | OUT )
      */
     public function generateCalculationForResistance($trainingLog, $activityCode)
     {
         // START MAIN
-            $trainingLogWithExerciseLink = array();
-            $targated_volume = $completed_volume = 0;
-            $additional_exercise = json_decode($trainingLog['additional_exercise']);
-            foreach ($additional_exercise as $key => $value) {
-                $trainingLogWithExerciseLink[$key]['data'] = $value->data;
-                $trainingLogWithExerciseLink[$key]['common_library_id'] = $value->common_library_id;
-                $trainingLogWithExerciseLink[$key]['library_id'] = $value->library_id;
-                $completed_volume += $this->getCompletedVolume($value->data, $trainingLog['training_intensity']['name']);
-            }
-            foreach ($trainingLog['exercise'] as $key => $value) {
-                $targated_volume += $this->getTargetedVolume($value['data'], $trainingLog['training_intensity']['name']);
-            }
-            $trainingLog['targated_volume'] = $targated_volume;
-            $trainingLog['completed_volume'] = $completed_volume;
-            $trainingLog['exercise'] = $trainingLogWithExerciseLink;
-            // $trainingLog['additional_exercise'] = json_encode($additional_exercise);
-            return $trainingLog;
+        $trainingLogWithExerciseLink = array();
+        $targated_volume = $completed_volume = 0;
+        $additional_exercise = json_decode($trainingLog['additional_exercise']);
+        foreach ($additional_exercise as $key => $value) {
+            $trainingLogWithExerciseLink[$key]['data'] = $value->data;
+            $trainingLogWithExerciseLink[$key]['common_library_id'] = $value->common_library_id;
+            $trainingLogWithExerciseLink[$key]['library_id'] = $value->library_id;
+            $completed_volume += $this->getCompletedVolume($value->data, $trainingLog['training_intensity']['name']);
+        }
+        foreach ($trainingLog['exercise'] as $key => $value) {
+            $targated_volume += $this->getTargetedVolume($value['data'], $trainingLog['training_intensity']['name']);
+        }
+        $trainingLog['targated_volume'] = $targated_volume;
+        $trainingLog['completed_volume'] = $completed_volume;
+        $trainingLog['completed_volume_unit'] = $this->total_volume_unit;
+        $trainingLog['exercise'] = $trainingLogWithExerciseLink;
+        $trainingLog['total_volume_unit'] = $this->total_volume_unit;
+        $trainingLog['average_weight_lifted_unit'] = $this->average_weight_lifted_unit;
+        // $trainingLog['additional_exercise'] = json_encode($additional_exercise);
+        return $trainingLog;
         // END MAIN
     }
     public function getTargetedVolume($params, $training_intensity)
@@ -136,25 +136,25 @@ class ResistanceCalculationController extends Controller
     {
         $grand_total = 0;
         foreach ($params as $key => $value) {
-                if ($value->reps != '') {
-                    $grand_total += (int) $value->weight * (int) $value->reps;
-                } else {
-                    $duration = explode(':', $value->duration);
-                    $minutes = $duration[0] ? $duration[0] : 0;
-                    $secs = $duration[1] ? $duration[1] : 0;
-                    $totalSecs = ($minutes * 60) + $secs;
-                    if ($training_intensity == 'Low') {
-                        $grand_total += $totalSecs / 4;
-                    } elseif ($training_intensity == 'Moderately-low') {
-                        $grand_total += $totalSecs / 5;
-                    } elseif ($training_intensity == 'Moderate') {
-                        $grand_total += $totalSecs / 6;
-                    } elseif ($training_intensity == 'Moderately-high') {
-                        $grand_total += $totalSecs / 4;
-                    } elseif ($training_intensity == 'High') {
-                        $grand_total += $totalSecs / 2;
-                    }
+            if ($value->reps != '') {
+                $grand_total += (int) $value->weight * (int) $value->reps;
+            } else {
+                $duration = explode(':', $value->duration);
+                $minutes = $duration[0] ? $duration[0] : 0;
+                $secs = $duration[1] ? $duration[1] : 0;
+                $totalSecs = ($minutes * 60) + $secs;
+                if ($training_intensity == 'Low') {
+                    $grand_total += $totalSecs / 4;
+                } elseif ($training_intensity == 'Moderately-low') {
+                    $grand_total += $totalSecs / 5;
+                } elseif ($training_intensity == 'Moderate') {
+                    $grand_total += $totalSecs / 6;
+                } elseif ($training_intensity == 'Moderately-high') {
+                    $grand_total += $totalSecs / 4;
+                } elseif ($training_intensity == 'High') {
+                    $grand_total += $totalSecs / 2;
                 }
+            }
         }
         return $grand_total;
     }
@@ -195,8 +195,8 @@ class ResistanceCalculationController extends Controller
         // "avg pace" End Calculate  -------------------------------------------
         return [
             'avg_pace' => $avg_pace ?? null,
-            'avg_pace_unit' =>  $this->avg_pace_unit ?? null,
-            'avg_pace_code' => $avg_pace_code ?? null
+            'avg_pace_unit' => $this->avg_pace_unit ?? null,
+            'avg_pace_code' => $avg_pace_code ?? null,
         ];
     }
 }

@@ -4,11 +4,11 @@
 
 namespace App\Http\Controllers\API\v1\Calender\LogSummary;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Libraries\Repositories\TrainingLogRepositoryEloquent;
 use App\Models\CustomCommonLibrariesDetails;
 use App\Supports\SummaryCalculationTrait;
+use Illuminate\Http\Request;
 
 class SummaryCalculationController extends Controller
 {
@@ -31,7 +31,7 @@ class SummaryCalculationController extends Controller
     public function generateSummaryDetails(Request $request)
     {
         $input = $request->all();
-        $validation = $this->requiredValidation(['id'/* , 'status' */], $input);
+        $validation = $this->requiredValidation(['id' /* , 'status' */], $input);
         if (isset($validation) && $validation['flag'] == false) {
             return $this->sendBadRequest(null, $validation['message']);
         }
@@ -79,19 +79,29 @@ class SummaryCalculationController extends Controller
 
         } else if (in_array($activityCode, [TRAINING_ACTIVITY_CODE_OTHERS])) {
             $response = app(OtherCalculationController::class)->generateCalculation($trainingLog, $activityCode);
-            if($summaryResponse['exercise'][0]['speed']!=''){
+            if ($summaryResponse['exercise'][0]['speed'] != '') {
                 $response['avg_pace_unit'] = 'min/km';
             }
-            if($summaryResponse['exercise'][0]['pace']!=''){
+            if ($summaryResponse['exercise'][0]['pace'] != '') {
                 $response['avg_speed_unit'] = 'm/min';
                 $response['avg_pace_unit'] = 'min/500m';
             }
             $summaryResponse = array_merge($summaryResponse, $response);
         } else {
             /** Else Means no Activity ( RESiSTANCE TRAINING LOG )*/
+            // $response = app(ResistanceCalculationController::class)->generateCalculation($trainingLog, $activityCode);
             $response = app(ResistanceCalculationController::class)->generateCalculationForResistance($trainingLog, $activityCode);
             $response['additional_exercise'] = json_decode($response['additional_exercise']);
-            $response['total_duration'] = json_decode($response['total_duration']);
+            // Convert 00:00:08 to 0:00:08
+            $total_duration = explode(":", json_decode($response['total_duration']));
+            if ($total_duration[0] == '00') {
+                $first_char = 0;
+            } else {
+                $first_char = $total_duration[0];
+            }
+            $total_duration = $first_char . ':' . $total_duration[1] . ':' . $total_duration[2];
+            // End
+            $response['total_duration'] = $total_duration;
             $summaryResponse = array_merge($summaryResponse, $response);
         }
         // dd('check', $summaryResponse, $trainingLog);
@@ -102,7 +112,7 @@ class SummaryCalculationController extends Controller
     public function generateSummaryDetailsNew(Request $request)
     {
         $input = $request->all();
-        $validation = $this->requiredValidation(['id'/* , 'status' */], $input);
+        $validation = $this->requiredValidation(['id' /* , 'status' */], $input);
         if (isset($validation) && $validation['flag'] == false) {
             return $this->sendBadRequest(null, $validation['message']);
         }
@@ -180,10 +190,10 @@ class SummaryCalculationController extends Controller
             $summaryResponse = array_merge($summaryResponse, $response);
         } else if (in_array($activityCode, [TRAINING_ACTIVITY_CODE_OTHERS])) {
             $response = app(OtherCalculationController::class)->generateCalculation($trainingLog, $activityCode);
-            if($summaryResponse['exercise'][0]['speed']!=''){
+            if ($summaryResponse['exercise'][0]['speed'] != '') {
                 $response['avg_pace_unit'] = 'min/km';
             }
-            if($summaryResponse['exercise'][0]['pace']!=''){
+            if ($summaryResponse['exercise'][0]['pace'] != '') {
                 $response['avg_speed_unit'] = 'm/min';
                 $response['avg_pace_unit'] = 'min/500m';
             }
@@ -273,12 +283,12 @@ class SummaryCalculationController extends Controller
             'training_log_style_list' => ['id', "name", 'code', 'mets'],
             'user_detail_list' => ['id', "name", "photo", 'weight', 'height', 'date_of_birth', 'gender'],
             // "is_complete" => $is_completed,
-            'first' => true
+            'first' => true,
         ];
         /* if ($is_completed == true) {
-            $logRequest['is_complete'] = $is_completed;
+        $logRequest['is_complete'] = $is_completed;
         } */
-        return  $this->trainingLogRepository->getDetailsByInput($logRequest);
+        return $this->trainingLogRepository->getDetailsByInput($logRequest);
         // return $trainingLog;
     }
 }
