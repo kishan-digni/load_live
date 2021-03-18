@@ -811,26 +811,43 @@ class TrainingLogController extends Controller
         // $trainingLog['total_duration1'] = $total_duration;
 
         $updated_trainingLog = array();
-        foreach ($trainingLog['exercise'] as $key => $exercise_data) {
-            foreach ($exercise_data['data'] as $key1 => $value) {
-                if ($value['is_completed'] && $value['is_completed_rest']) {
-                    $updated_trainingLog[$key]['data'][] = $value;
-                    // $updated_trainingLog[$key]['data']['is_completed'] = $value['is_completed'];
-                } else {
-                    unset($trainingLog['exercise'][$key]['data'][$key1]);
+        if ($trainingLog['exercise'][0]['data'][0]['start_time'] == '' || $trainingLog['exercise'][0]['data'][0]['start_time'] == null) {
+            // dd('if');
+            $trainingLog['total_duration'] = '';
+            $updated_trainingLog = $trainingLog['exercise'];
+        } else {
+           
+
+            foreach ($trainingLog['exercise'] as $key => $exercise_data) {
+                foreach ($exercise_data['data'] as $key1 => $value) {
+                    if ($value['is_completed'] && $value['is_completed_rest']) {
+                       
+                        $updated_trainingLog[$key]['data'][] = $value;
+                        // $updated_trainingLog[$key]['data']['is_completed'] = $value['is_completed'];
+                    } else {
+                        unset($trainingLog['exercise'][$key]['data'][$key1]);
+                    }
+                }
+
+                if (count($trainingLog['exercise'][$key]['data'])) {
+
+                    $updated_trainingLog[$key]['is_completed'] = $exercise_data['is_completed'];
+                    $updated_trainingLog[$key]['exercise_link'] = $exercise_data['exercise_link'];
+                    $updated_trainingLog[$key]['name'] = $exercise_data['name'];
+                    $updated_trainingLog[$key]['common_library_id'] = $exercise_data['common_library_id'];
+                    $updated_trainingLog[$key]['library_id'] = $exercise_data['library_id'];
                 }
             }
-            if (count($trainingLog['exercise'][$key]['data'])) {
-                $updated_trainingLog[$key]['is_completed'] = $exercise_data['is_completed'];
-                $updated_trainingLog[$key]['exercise_link'] = $exercise_data['exercise_link'];
-                $updated_trainingLog[$key]['name'] = $exercise_data['name'];
-                $updated_trainingLog[$key]['common_library_id'] = $exercise_data['common_library_id'];
-                $updated_trainingLog[$key]['library_id'] = $exercise_data['library_id'];
-            }
         }
-        // dd(json_encode($updated_trainingLog));
-        $trainingLog['exercise'] = $updated_trainingLog;
 
+        // dd(json_encode($updated_trainingLog));
+        $new_array = array();
+       
+        foreach ($updated_trainingLog as $k => $exercise) {
+            $new_array[] = $exercise;
+        }
+        $trainingLog['exercise'] = $new_array;
+        
         $settingTraining = $this->settingTrainingRepository->getDetailsByInput([
             'user_id' => \Auth::id(),
             'list' => ['run_auto_pause', 'cycle_auto_pause'],
@@ -1183,10 +1200,10 @@ class TrainingLogController extends Controller
         ]);
 
         if (!!!isset($trainingLogCheck)) {
-        return $this->sendBadRequest(null, __('validation.common.details_not_found', ['module' => $this->moduleName]));
+            return $this->sendBadRequest(null, __('validation.common.details_not_found', ['module' => $this->moduleName]));
         }
-        $data['total_duration'] =  json_encode($request->total_duration);
-        $data['additional_exercise'] =  json_encode($request->exercise);
+        $data['total_duration'] = json_encode($request->total_duration);
+        $data['additional_exercise'] = json_encode($request->exercise);
         $trainingLog = $this->trainingLogRepository->updateRich($data, $id);
         /** give return data with relation */
         $returnDetailsRequest = [
