@@ -777,6 +777,7 @@ class TrainingLogController extends Controller
     public function saveGeneratedCalculationsResistanceLog($id)
     {
         $trainingLog = $this->getLogDetailsById($id);
+        dd($trainingLog['exercise']);
         if ($trainingLog['status'] == 'RESISTANCE') {
             $trainingLogWithExerciseLink = array();
             $targated_volume = $completed_volume = 0;
@@ -805,11 +806,14 @@ class TrainingLogController extends Controller
             return $this->sendBadRequest(null, __('validation.common.details_not_found', ['module' => $this->moduleName]));
         }
         $trainingLog = $trainingLog->toArray();
-        $total_duration = $this->totalDurationMinute($trainingLog);
-        // $trainingLog['total_duration'] = $total_duration;
-        $trainingLog['total_duration'] = gmdate('H:i:s', $total_duration);
-        // $trainingLog['total_duration1'] = $total_duration;
-
+        $total_duration = $this->totalDurationMinuteNew($trainingLog);
+        
+        $init = $total_duration*60;
+        $hours = sprintf('%02d',floor($init / 3600));
+        $minutes = sprintf('%02d',floor(($init / 60) % 60));
+        $seconds = sprintf('%02d',$init % 60);
+        $trainingLog['total_duration'] = $hours.':'.$minutes.':'.$seconds;
+       // $trainingLog['total_duration'] = gmdate('H:i:s',$total_duration*60);
         $updated_trainingLog = array();
         if ($trainingLog['exercise'][0]['data'][0]['start_time'] == '' || $trainingLog['exercise'][0]['data'][0]['start_time'] == null) {
             // dd('if');
