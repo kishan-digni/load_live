@@ -58,6 +58,7 @@ $router->group([/* 'prefix' => 'api' */], function () use ($router) {
             $router->post('check-program-is-available', "TrainingProgramController1@checkProgramIsAvailableOrNotToStore");
             /* Edit delete flags for cardio and resistance program */
             $router->post('program-flags', "TrainingProgramController1@programFlags");
+            $router->post('delete-training-programs', "TrainingProgramController1@deleteTrainingPrograms");
 
             /** week related apis */
             $router->post('get-weeks-laps', "TrainingProgramController1@store");

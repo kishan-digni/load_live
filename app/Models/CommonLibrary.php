@@ -253,10 +253,15 @@ class CommonLibrary extends Model
     /** add exercise_link data from User's added libraries  */
     public function getExerciseLinkAttribute($value)
     {
-        $userRepetitionMax = CustomCommonLibrariesDetails::where('common_libraries_id', $this->attributes['id'])
-            ->where('user_id', Auth::id())
+        if($this->attributes['id'] != 0 && $this->attributes['id'] != '' && $this->attributes['id'] != null) {
+            $userRepetitionMax = CustomCommonLibrariesDetails::where('common_libraries_id', $this->attributes['id'])
             ->select('exercise_link')
             ->first();
+        } else {
+            $userRepetitionMax = CustomCommonLibrariesDetails::where('user_id', Auth::id())
+            ->select('exercise_link')
+            ->first();
+        }
         if (isset($userRepetitionMax, $userRepetitionMax['exercise_link'])) {
             $repMax  = $userRepetitionMax['exercise_link'];
         }

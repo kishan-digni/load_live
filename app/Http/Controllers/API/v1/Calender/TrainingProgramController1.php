@@ -114,11 +114,12 @@ class TrainingProgramController1 extends Controller
         ]);        
             $current_date = date('Y-m-d');
             $response['is_cardio_preset_delete'] = $response['is_cardio_custom_edit'] = $response['is_resistance_preset_delete'] = $response['is_resistance_custom_edit'] =  0;
-            $response['is_cardio'] = $response['is_resistance'] = 1;
+            $response['is_cardio'] = $response['is_resistance'] = 1;        
         foreach ($program as $key => $value) {
 
             if ($value->status == TRAINING_PROGRAM_STATUS_CARDIO && $value->type == TRAINING_PROGRAM_TYPE_PRESET && $value->end_date >= $current_date) {
                 $response['is_cardio_preset_delete'] = 1;                
+                $response['is_cardio_preset_delete_id'] = $value->id;                
             }
             
             if ($value->status == TRAINING_PROGRAM_STATUS_CARDIO && $value->end_date > $current_date) {                
@@ -131,20 +132,33 @@ class TrainingProgramController1 extends Controller
 
             if ($value->status == TRAINING_PROGRAM_STATUS_RESISTANCE && $value->type == TRAINING_PROGRAM_TYPE_PRESET && $value->end_date >= $current_date) {
                 $response['is_resistance_preset_delete'] = 1;
+                $response['is_resistance_preset_delete_id'] = $value->id;
             }
 
             if ($value->status == TRAINING_PROGRAM_STATUS_CARDIO && $value->type == TRAINING_PROGRAM_TYPE_CUSTOM && $value->end_date >= $current_date) {
                 $response['is_cardio_custom_edit'] = 1;
+                $response['is_cardio_custom_edit_id'] = $value->id;
             }
 
             if ($value->status == TRAINING_PROGRAM_STATUS_RESISTANCE && $value->type == TRAINING_PROGRAM_TYPE_CUSTOM && $value->end_date >= $current_date) {
                 $response['is_resistance_custom_edit'] = 1;
+                $response['is_resistance_custom_edit_id'] = $value->id;
             }
         }
         $result['data'] = $response;
         return $this->sendSuccessResponse($result['data'], "Training program details retrieve successfully.");
     }
 
+    public function deleteTrainingPrograms(Request $request){
+        $input = $request->all();
+        /** validation */
+        $validation = $this->requiredAllKeysValidation(['training_program_id'], $input);
+        if (isset($validation) && $validation['flag'] === false) {
+            return $this->sendBadRequest(null, $validation['message']);
+        }
+        $deleteTrainingPrograms = $this->trainingProgramsRepository->delete($input['training_program_id']);
+        return $this->sendSuccessResponse(null, "Training program deleted successfully.");
+    }
     /**
      * storeResistanceAndCardioPresetFn => to create training program with status type
      *
