@@ -164,24 +164,32 @@ class CompletedTrainingProgramRepositoryEloquent extends BaseRepository implemen
      *
      * @return void
      */
+    /** Start
+        * Modified By : Kishan J Gareja
+        * Modified Date : 24-March-2021
+    */
     public function updateRich($input, $id)
     {
         $value = $this->makeModel();
         $value = $value->whereId($id)->first();
-        // $value->fill($input)->update();
+        $trainingProgram = TrainingPrograms::find($id);
+
+        $input['start_date'] = $trainingProgram->start_date;
+        $input['end_date'] = $trainingProgram->end_date;
+
         if (isset($value)) {
-            $value->fill($input)->update();
+            $value->update($input);
             return $value->fresh();
         }
     }
-
+    /** End Modified */
     /**
      * getDetailsByInput => Get All Details By Input
      *
      * @param  mixed $input
      *
      * @return void
-     */
+     */  
     public function getDetailsByInput($input = null)
     {
         $value = $this->makeModel();

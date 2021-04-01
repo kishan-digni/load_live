@@ -26,6 +26,8 @@ class CompletedTrainingProgram extends Model
         'exercise', // for set daily exercise
         'is_complete', // to check exercise is completed or not
         "date", // date of selected week of program.
+        'start_date', // start date
+        'end_date', // end date
     ];
 
     /**

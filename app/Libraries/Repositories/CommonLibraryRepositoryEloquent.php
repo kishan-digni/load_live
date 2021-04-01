@@ -121,6 +121,9 @@ class CommonLibraryRepositoryEloquent extends BaseRepository implements UsersRep
             $value = $value->where('is_active', $input['is_active']);
         }
 
+        if (isset($input['is_favorite'])) {
+            $value = $value->where('is_favorite', $input['is_favorite']);
+        }
         /** date wise records */
         if (isset($input['start_date'])) {
             $value = $value->where('created_at', ">=", $input['start_date']);

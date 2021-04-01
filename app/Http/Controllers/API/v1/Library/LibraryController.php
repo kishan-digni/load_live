@@ -5,6 +5,7 @@
 namespace App\Http\Controllers\API\v1\Library;
 
 use App\Models\Library;
+use App\Models\CommonLibrary;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -50,14 +51,21 @@ class LibraryController extends Controller
         if (isset($validation) && $validation['flag'] === false) {
             return $this->sendBadRequest(null, $validation['message']);
         }
-
+       
         /** check for favorite list */
         if (isset($input['status']) && $input['status'] == LIBRARY_LIST_FAVORITE) {
             $input['is_favorite'] = true;
+            $commonLibraries = $this->commonLibraryRepository->getDetails([
+                'relation' => $input['relation'],
+                //'category_id' => $bodyPart->id,
+                'search' => $input['search'] ?? null,
+                "search_from" => $input['search_from'] ?? null,
+                "is_favorite" => 1,
+            ]);
         } else {
             // updated to multiple status
             $bodyPart = $this->bodyPartRepository->getDetailsByInput(['code' => $input['status'], 'first' => true, 'list' => ['id', 'display_id']]);
-                    //    dd("Body Parts", $bodyPart->toArray());
+            //    dd("Body Parts", $bodyPart->toArray());
             if (isset($bodyPart)) {
                 $input['regions_ids'] = [$bodyPart->id];
                 $input['category_id'] = $bodyPart->id;
@@ -69,7 +77,7 @@ class LibraryController extends Controller
                 "search_from" => $input['search_from'] ?? null
             ]);
         }
-
+       
         $libraries = $this->libraryRepository->getDetails($input);
         // dd('all lub',  $libraries['list']->toArray());
         if (isset($libraries) && $libraries['count'] === 0 && isset($commonLibraries) && $commonLibraries['count'] === 0) {
@@ -80,9 +88,15 @@ class LibraryController extends Controller
             $libraries['list'] = array_merge($libraries['list'], $commonLibraries['list']->toArray());
         }
         /** for give group wise listing of library listing else normal listing. */
-        if (isset($input['status'], $input['is_group_wise']) && $input['status'] != LIBRARY_LIST_FAVORITE && $input['is_group_wise'] == true) {
+        //if (isset($input['status'], $input['is_group_wise']) && $input['status'] != LIBRARY_LIST_FAVORITE && $input['is_group_wise'] == true) {
+        if (isset($input['status'], $input['is_group_wise']) && $input['is_group_wise'] == true) {
+        
             /** filter all sub part related status parent id data */
-            $getRegions = $this->bodyPartRepository->getDetailsByInput(['parent_id' => $bodyPart->id, $input, "is_active" => true]);
+            if (isset($input['status']) && $input['status'] == LIBRARY_LIST_FAVORITE) {
+                $getRegions = $this->bodyPartRepository->getDetailsByInput([ $input, "is_active" => true]);
+            } else {
+                $getRegions = $this->bodyPartRepository->getDetailsByInput(['parent_id' => $bodyPart->id, $input, "is_active" => true]);
+            }           
             if (isset($getRegions) && count($getRegions) == 0) {
                 return $this->sendBadRequest(null, __("validation.common.details_not_found", ['module' => "body parts"]));
             }
@@ -113,7 +127,7 @@ class LibraryController extends Controller
                                  * No need to proceed next process.
                                  */
                             } else {
-                                $allLibraries[] = $library;
+                                $allLibraries[] = $library;                           
                             }
                         }
                         // else {
@@ -137,12 +151,14 @@ class LibraryController extends Controller
                         // }
                     }
                 }
-                array_push($response, [
-                    'id' => $region['id'],
-                    'name' => $region['name'],
-                    'type' => $region['type'],
-                    "data" => $allLibraries ?? []
-                ]);
+                if(isset($allLibraries) && !empty($allLibraries) ){
+                    array_push($response, [
+                        'id' => $region['id'],
+                        'name' => $region['name'],
+                        'type' => $region['type'],
+                        "data" => $allLibraries ?? []
+                    ]);
+                }
                 unset($allLibraries);
             }
             $libraries['list'] = $response;
@@ -309,28 +325,37 @@ class LibraryController extends Controller
      *
      * @return void
      */
+    /** Start
+         * Modified By : Kishan J Gareja (A)
+         * Modified Date : 24-March-2021
+    */
     public function setToFavorite($id, Request $request)
-    {
-        /** check id is exists or not */
-        $library = $this->libraryRepository->findByField('id', $id);
-        if (isset($library) && count($library) == 0) {
-            return $this->sendBadRequest(null, __("validation.common.details_not_found", ['module' => $this->moduleName]));
-        }
-        $library = $library->first();
-
+    {       
         $input = $request->all();
+        if($input['user_id'] == 0) {
+            $common_library = CommonLibrary::find($id);
+            $common_library->is_favorite = $input['is_favorite'];
+            $common_library->save();
+        } else {
+            /** check id is exists or not */
+            $library = $this->libraryRepository->findByField('id', $id);
+            if (isset($library) && count($library) == 0) {
+                return $this->sendBadRequest(null, __("validation.common.details_not_found", ['module' => $this->moduleName]));
+            }
+            $library = $library->first();
 
-        $validation = $this->requiredValidation(['is_favorite'], $input);
-        if (isset($validation) && $validation['flag'] === false) {
-            return $this->sendBadRequest(null, $validation['message']);
-        }
-
-        $library->is_favorite = $input['is_favorite'];
-        $library->save();
+            $validation = $this->requiredValidation(['is_favorite'], $input);
+            if (isset($validation) && $validation['flag'] === false) {
+                return $this->sendBadRequest(null, $validation['message']);
+            }
+      
+            $library->is_favorite = $input['is_favorite'];
+            $library->save();
+        }       
         // $library->fresh();
         return $this->sendSuccessResponse(null, __('validation.common.saved', ['module' => $this->moduleName]));
     }
-
+    /** End Modified */
     /**
      * destroy => delete library
      *

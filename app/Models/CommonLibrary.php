@@ -249,7 +249,10 @@ class CommonLibrary extends Model
             ? true
             : false;
     }
-
+    /** Start
+         * Modified By : Kishan J Gareja (A)
+         * Modified Date : 22-March-2021
+    */
     /** add exercise_link data from User's added libraries  */
     public function getExerciseLinkAttribute($value)
     {
@@ -267,7 +270,7 @@ class CommonLibrary extends Model
         }
         return $this->attributes['exercise_link'] = $repMax ?? null;
     }
-
+    /** End Modified */
     /**
      * setRepetitionMaxAttribute => when store in the database set to sting format
      *
