@@ -110,7 +110,11 @@ class ResistanceCalculationController extends Controller
         $trainingLog['total_volume'] = array_sum($allVolume);
         $trainingLog['total_volume_unit'] = $this->total_volume_unit;
         /** maintain reminder here */
-        $trainingLog['average_weight_lifted'] = round(($trainingLog['total_volume'] / $allRepsCount), 2);
+        if($allRepsCount <= 0) {
+            $trainingLog['average_weight_lifted'] = 0;
+        } else {
+            $trainingLog['average_weight_lifted'] = round(($trainingLog['total_volume'] / $allRepsCount), 2);
+        }
         $trainingLog['average_weight_lifted_unit'] = $this->average_weight_lifted_unit;
 
         $trainingLog['targated_volume'] = $targated_volume;
