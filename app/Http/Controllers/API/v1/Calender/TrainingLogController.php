@@ -37,7 +37,8 @@ class TrainingLogController extends Controller
     protected $trainingProgramsRepository;
     protected $trainingActivityRepository;
     protected $logCardioValidationsRepository;
-
+    protected $total_volume_unit;
+    protected $average_weight_lifted_unit;
     public function __construct(
         TrainingLogRepositoryEloquent $trainingLogRepository,
         SavedWorkoutsRepositoryEloquent $savedWorkoutsRepository,
@@ -52,6 +53,8 @@ class TrainingLogController extends Controller
         $this->trainingProgramsRepository = $trainingProgramsRepository;
         $this->trainingActivityRepository = $trainingActivityRepository;
         $this->logCardioValidationsRepository = $logCardioValidationsRepository;
+        $this->total_volume_unit = "kg";
+        $this->average_weight_lifted_unit = "kg/rep";
     }
 
     /**
@@ -271,6 +274,8 @@ class TrainingLogController extends Controller
             }
             $trainingLog['targated_volume'] = $targated_volume;
             $trainingLog['completed_volume'] = $completed_volume;
+            $trainingLog['completed_volume_unit'] = $this->total_volume_unit;
+            $trainingLog['targated_volume_unit'] = $this->total_volume_unit;
             $trainingLog['exercise'] = $trainingLogWithExerciseLink;
         }
         /** End Modified */
@@ -396,6 +401,23 @@ class TrainingLogController extends Controller
             'training_log_list' => $data['training_log_list']['list'] ?? [],
             'training_program_list' => $data['training_program_list']['list'] ?? [],
         ];
+
+        foreach($data['training_log_list'] as $key => $training_log_list) {
+            if($training_log_list['status'] == 'RESISTANCE') {
+                 $targated_volume = $completed_volume = 0;
+                 $data['training_log_list'][$key]['exercise'] = json_encode($training_log_list['exercise']);
+                 $training_log = json_decode($training_log_list['exercise']);
+                 foreach ($training_log as $key1 => $value) {
+                     $value = (array) $value;
+                     $targated_volume += $this->getTargetedVolume($value['data'], $training_log_list['training_intensity']['name']);
+                     $completed_volume += $this->getCompletedVolume($value['data'], $training_log_list['training_intensity']['name']);
+                 }  
+                 $data['training_log_list'][$key]['targated_volume'] =  $targated_volume;
+                 $data['training_log_list'][$key]['completed_volume'] =  $completed_volume;
+                 $data['training_log_list'][$key]['completed_volume_unit'] = $this->total_volume_unit;
+                 $data['training_log_list'][$key]['targated_volume_unit'] = $this->total_volume_unit;
+             }
+         }
         return $this->sendSuccessResponse($data, __('validation.common.details_found', ['module' => "Calender"]));
     }
 
@@ -777,7 +799,6 @@ class TrainingLogController extends Controller
     public function saveGeneratedCalculationsResistanceLog($id)
     {
         $trainingLog = $this->getLogDetailsById($id);
-        dd($trainingLog['exercise']);
         if ($trainingLog['status'] == 'RESISTANCE') {
             $trainingLogWithExerciseLink = array();
             $targated_volume = $completed_volume = 0;
@@ -1141,6 +1162,7 @@ class TrainingLogController extends Controller
     {
         $grand_total = 0;
         foreach ($params as $key => $value) {
+            $value = (array) $value;
             if ($value['reps'] != '') {
                 $grand_total += (int) $value['weight'] * (int) $value['reps'];
             } else {
@@ -1168,6 +1190,7 @@ class TrainingLogController extends Controller
     {
         $grand_total = 0;
         foreach ($params as $key => $value) {
+            $value = (array) $value;
             if ($value['is_completed'] && $value['is_completed_rest']) {
                 if ($value['reps'] != '') {
                     $grand_total += (int) $value['weight'] * (int) $value['reps'];

@@ -121,6 +121,7 @@ class ResistanceCalculationController extends Controller
         $trainingLog['completed_volume'] = $completed_volume;
         $trainingLog['completed_volume_unit'] = $this->total_volume_unit;
         $trainingLog['exercise'] = $trainingLogWithExerciseLink;
+        $trainingLog['targated_volume_unit'] = $this->total_volume_unit;
         // $trainingLog['additional_exercise'] = json_encode($additional_exercise);
         return $trainingLog;
         // END MAIN
