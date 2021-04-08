@@ -175,13 +175,22 @@ class CompletedTrainingProgramRepositoryEloquent extends BaseRepository implemen
     {
         $value = $this->makeModel();
         $value = $value->whereId($id)->first();
-        $trainingProgram = TrainingPrograms::find($id);
+        /** Start
+        * Modified By : Kishan J Gareja (A)
+        * Modified Date : 08-April-2021
+        * Reasion : for change status complete using update-week-wise-daily-programs api
+        */
 
+        /* $trainingProgram = TrainingPrograms::find($id);
         $input['start_date'] = $trainingProgram->start_date;
         $input['end_date'] = $trainingProgram->end_date;
-
         if (isset($value)) {
             $value->update($input);
+            return $value->fresh();
+        } */
+        /** End Modified */
+        if (isset($value)) {
+            $value->fill($input)->update();
             return $value->fresh();
         }
     }
