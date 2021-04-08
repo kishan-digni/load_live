@@ -85,6 +85,9 @@ class CompletedTrainingProgramRepositoryEloquent extends BaseRepository implemen
         if (isset($input['end_date'])) {
             $value = $value->where('date', "<=", $input['end_date']);
         }
+        if (isset($input['status'])) {
+            $value = $value->where('status', "!=" , $input['status']);
+        }
         // if (isset($input['start_date'])) {
         //     $value = $value->where('created_at', ">=", $input['start_date']);
         // }

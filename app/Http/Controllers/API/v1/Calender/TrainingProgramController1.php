@@ -445,12 +445,11 @@ class TrainingProgramController1 extends Controller
         if (isset($validation) && $validation['flag'] === false) {
             return $this->sendBadRequest(null, $validation['message']);
         }
-
         /** check date wise preset program is found or not */
         $trainingProgramCount = $this->trainingProgramsRepository->getDetailsByInput(
             [
                 'user_id' => Auth::id(),
-                // "status" => $input['status'],
+                "status" => $input['status'],
                 'type' => TRAINING_PROGRAM_TYPE_PRESET,
                 'start_date' => $input['start_date'],
                 'end_date' => $input['end_date'],
