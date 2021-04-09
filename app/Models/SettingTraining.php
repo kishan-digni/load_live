@@ -43,6 +43,7 @@ class SettingTraining extends Model
 
     ];
 
+    protected $appends = ['vo2_max'];
     /** for casting tiny integer to boolean values. */
     protected $casts = [
         'run_auto_pause' => 'boolean',
@@ -114,7 +115,7 @@ class SettingTraining extends Model
                 $age = $currentYear - (int) $birthYear;
                 $hrMax = (206.9 - (0.67 * (float) ($age)));
                 $hrMax = (string) round($hrMax, 1);
-                $value->hr_max = (int) $hrMax;
+                $value->hr_max = (int) $hrMax;           
             }
         });
     }
@@ -137,6 +138,17 @@ class SettingTraining extends Model
      * @param  mixed $value
      * @return void
      */
+    public function getVo2MaxAttribute($value)
+    {
+        if($this->attributes['hr_rest'] != 0 && $this->attributes['hr_rest'] != null && $this->attributes['hr_rest'] != ''){
+            $vo2_max = 15.3 * ($this->attributes['hr_max'] / $this->attributes['hr_rest']);
+            $vo2_max = (int) round($vo2_max, 1);
+        } else {
+            $vo2_max = '';
+        }
+        return $vo2_max = $vo2_max;
+    }
+
     public function setTrainingUnitIdsAttribute($value)
     {
         if (isset($value) && is_array($value)) {
@@ -147,7 +159,7 @@ class SettingTraining extends Model
         }
         $this->attributes['training_unit_ids'] = $value;
     }
-
+    
     /**
      * getTrainingUnitIdsAttribute
      *
