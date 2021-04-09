@@ -22,6 +22,7 @@ class SettingTraining extends Model
         'training_unit_ids',
         'training_physical_activity_level_ids',
         'hr_max', // HR max
+        'vo2_max', //Vo2 max
         'is_hr_max_is_estimated', // to check whether user has changed the hr max or not? true means estimated else customized
         'hr_rest', // HR max
         'run_auto_pause',
@@ -43,7 +44,7 @@ class SettingTraining extends Model
 
     ];
 
-    protected $appends = ['vo2_max'];
+    //protected $appends = ['vo2_max'];
     /** for casting tiny integer to boolean values. */
     protected $casts = [
         'run_auto_pause' => 'boolean',
@@ -115,8 +116,21 @@ class SettingTraining extends Model
                 $age = $currentYear - (int) $birthYear;
                 $hrMax = (206.9 - (0.67 * (float) ($age)));
                 $hrMax = (string) round($hrMax, 1);
-                $value->hr_max = (int) $hrMax;           
+                $value->hr_max = (int) $hrMax;  
             }
+            if(isset($value->hr_rest) && $value->hr_rest != 0 && $value->hr_rest != null && $value->hr_rest != ''){
+                $vo2Max = 15.3 * ( $value->hr_max / $value->hr_rest);
+                $vo2Max = round($vo2Max, 1);
+                $vo2Max = (int)$vo2Max;
+                $value->hr_rest = (int)$value->hr_rest;
+            } else {
+                if(isset($value->vo2_max) && $value->vo2_max != 0 && $value->vo2_max != null && $value->vo2_max != '') {
+                    $vo2Max = (int)$value->vo2_max;
+                } else {
+                    $vo2Max = '';
+                }
+            }
+            $value->vo2_max = (int)$vo2Max;       
         });
     }
 
@@ -138,16 +152,20 @@ class SettingTraining extends Model
      * @param  mixed $value
      * @return void
      */
-    public function getVo2MaxAttribute($value)
+    /* public function getVo2MaxAttribute($value)
     {
         if($this->attributes['hr_rest'] != 0 && $this->attributes['hr_rest'] != null && $this->attributes['hr_rest'] != ''){
             $vo2_max = 15.3 * ($this->attributes['hr_max'] / $this->attributes['hr_rest']);
             $vo2_max = (int) round($vo2_max, 1);
         } else {
-            $vo2_max = '';
+            if(isset($this->attributes['vo2_max']) && $this->attributes['vo2_max'] != 0 && $this->attributes['vo2_max'] != null && $this->attributes['vo2_max'] != '') {
+                $vo2_max = (int)$this->attributes['vo2_max'];
+            } else {
+                $vo2_max = '';
+            }
         }
-        return $vo2_max = $vo2_max;
-    }
+        return $this->attributes['vo2_max'] = $vo2_max;
+    } */
 
     public function setTrainingUnitIdsAttribute($value)
     {
