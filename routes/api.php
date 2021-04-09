@@ -211,6 +211,7 @@ $router->group([/* 'prefix' => 'api' */], function () use ($router) {
             $router->post('add-billing-information', "SettingController@createCardForBillingInformation");
 
             $router->get('all-training-units-list', "SettingController@getAllSettingTrainingUnits");
+            $router->get('all-physical-activity-level-list', "SettingController@getAllPhysicalActivityLevels");
         });
 
         /**

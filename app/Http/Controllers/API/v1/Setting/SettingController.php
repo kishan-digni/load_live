@@ -12,6 +12,7 @@ use App\Libraries\Repositories\SettingPremiumRepositoryEloquent;
 use App\Libraries\Repositories\SettingTrainingRepositoryEloquent;
 use App\Libraries\Repositories\SpecializationsRepositoryEloquent;
 use App\Libraries\Repositories\TrainingSettingUnitsRepositoryEloquent;
+use App\Libraries\Repositories\TrainingSettingPhysicalActivityLevelsRepositoryEloquent;
 use App\Libraries\Repositories\UsersRepositoryEloquent;
 use App\Models\BillingInformation;
 use App\Supports\DateConvertor;
@@ -283,5 +284,13 @@ class SettingController extends Controller
             'is_active' => true
         ]);
         return $this->sendSuccessResponse($units, __('validation.common.details_found', ['module' => 'Training Units']));
+    }
+    public function getAllPhysicalActivityLevels(): \Illuminate\Http\JsonResponse
+    {
+        $trainingPhysicalActivityLevelsRepository = app(TrainingSettingPhysicalActivityLevelsRepositoryEloquent::class);
+        $units = $trainingPhysicalActivityLevelsRepository->getDetailsByInput([
+            'is_active' => true
+        ]);
+        return $this->sendSuccessResponse($units, __('validation.common.details_found', ['module' => 'Training Physical Activity Levels']));
     }
 }

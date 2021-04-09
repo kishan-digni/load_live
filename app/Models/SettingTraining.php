@@ -20,6 +20,7 @@ class SettingTraining extends Model
     protected $fillable = [
         'user_id', // Which user id can store it.
         'training_unit_ids',
+        'training_physical_activity_level_ids',
         'hr_max', // HR max
         'is_hr_max_is_estimated', // to check whether user has changed the hr max or not? true means estimated else customized
         'hr_rest', // HR max
