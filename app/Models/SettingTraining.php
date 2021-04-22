@@ -24,6 +24,7 @@ class SettingTraining extends Model
         'hr_max', // HR max
         'vo2_max', //Vo2 max
         'is_hr_max_is_estimated', // to check whether user has changed the hr max or not? true means estimated else customized
+        'is_vo2_max_is_estimated',
         'hr_rest', // HR max
         'run_auto_pause',
         'cycle_auto_pause',
@@ -49,6 +50,7 @@ class SettingTraining extends Model
     protected $casts = [
         'run_auto_pause' => 'boolean',
         'is_hr_max_is_estimated' => 'boolean',
+        'is_vo2_max_is_estimated' => 'boolean',
         'cycle_auto_pause' => 'boolean'
     ];
 
@@ -118,7 +120,7 @@ class SettingTraining extends Model
                 $hrMax = (string) round($hrMax, 1);
                 $value->hr_max = (int) $hrMax;  
             }
-            if(isset($value->hr_rest) && $value->hr_rest != 0 && $value->hr_rest != null && $value->hr_rest != ''){
+            /* if(isset($value->hr_rest) && $value->hr_rest != 0 && $value->hr_rest != null && $value->hr_rest != ''){
                 $vo2Max = 15.3 * ( $value->hr_max / $value->hr_rest);
                 $vo2Max = round($vo2Max, 1);
                 $vo2Max = (int)$vo2Max;
@@ -130,7 +132,17 @@ class SettingTraining extends Model
                     $vo2Max = '';
                 }
             }
-            $value->vo2_max = (int)$vo2Max;       
+            $value->vo2_max = (int)$vo2Max;  */   
+            if(isset($value->hr_rest) && $value->hr_rest != 0 && $value->hr_rest != null && $value->hr_rest != ''){
+                $value->hr_rest = (int)$value->hr_rest;
+            } else {
+                $value->hr_rest = "";
+            }
+            if(isset($value->vo2_max) && $value->vo2_max != 0 && $value->vo2_max != null && $value->vo2_max != '') {
+                $value->vo2_max = (int)$value->vo2_max;  
+            } else {
+                $value->vo2_max = "";
+            }
         });
     }
 

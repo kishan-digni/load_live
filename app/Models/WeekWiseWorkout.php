@@ -25,6 +25,7 @@ class WeekWiseWorkout extends Model
         'training_intensity_id', //  
     ];
 
+    protected $appends = ['phase_name'];
     /**
      * rules => set Validation Rules
      *
@@ -194,5 +195,14 @@ class WeekWiseWorkout extends Model
     public function week_wise_workout_laps_details()
     {
         return $this->hasMany(WorkoutWiseLap::class, 'week_wise_workout_id', 'id');
+    }
+
+    public function getPhaseNameAttribute($value)
+    {
+        if(isset($this->attributes['phase_id'])) {
+            $phase = Phases::find($this->attributes['phase_id']);
+            return $phase->phase_name;
+        }
+        
     }
 }

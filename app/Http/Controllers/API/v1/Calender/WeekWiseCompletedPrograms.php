@@ -304,7 +304,7 @@ class WeekWiseCompletedPrograms extends Controller
             $higTHR = ($thrArr[1]  / 100) * $hrMax;
 
             // dd('data ', "ID " . \Auth::id(),  $hrMax, "($thrArr[0] / 100)  * $hrMax",   $thrArr, $minTHR, $higTHR);
-            $weekWiseWorkoutDetail['calculated_THR'] = (int) round($minTHR) . "-" . (int) round($higTHR);
+            $weekWiseWorkoutDetail['calculated_THR'] = (int) round($minTHR) . " - " . (int) round($higTHR);
         }
         return $weekWiseWorkoutDetail;
     }
