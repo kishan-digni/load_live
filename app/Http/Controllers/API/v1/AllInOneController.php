@@ -26,6 +26,7 @@ use App\Libraries\Repositories\PaymentOptionsRepositoryEloquent;
 use App\Libraries\Repositories\SpecializationsRepositoryEloquent;
 use App\Libraries\Repositories\TargetedMusclesRepositoryEloquent;
 use App\Libraries\Repositories\TrainingActivityRepositoryEloquent;
+use App\Libraries\Repositories\TrainingProgramActivityRepositoryEloquent;
 use App\Libraries\Repositories\TrainingLogStyleRepositoryEloquent;
 use App\Libraries\Repositories\ProfessionalTypesRepositoryEloquent;
 use App\Libraries\Repositories\TrainingFrequencyRepositoryEloquent;
@@ -57,6 +58,7 @@ class AllInOneController extends Controller
     protected $targetedMusclesRepository;
     protected $specializationsRepository;
     protected $trainingActivityRepository;
+    protected $trainingProgramActivityRepository;
     protected $professionalTypesRepository;
     protected $trainingIntensityRepository;
     protected $trainingFrequencyRepository;
@@ -87,6 +89,7 @@ class AllInOneController extends Controller
      * @param SpecializationsRepositoryEloquent $specializationsRepository
      * @param TargetedMusclesRepositoryEloquent $targetedMusclesRepository
      * @param TrainingActivityRepositoryEloquent $trainingActivityRepository
+     * @param TrainingProgramActivityRepositoryEloquent $trainingProgramActivityRepository
      * @param ProfessionalTypesRepositoryEloquent $professionalTypesRepository
      * @param TrainingIntensityRepositoryEloquent $trainingIntensityRepository
      * @param TrainingFrequencyRepositoryEloquent $trainingFrequencyRepository
@@ -116,6 +119,7 @@ class AllInOneController extends Controller
         SpecializationsRepositoryEloquent $specializationsRepository,
         TargetedMusclesRepositoryEloquent $targetedMusclesRepository,
         TrainingActivityRepositoryEloquent $trainingActivityRepository,
+        TrainingProgramActivityRepositoryEloquent $trainingProgramActivityRepository,
         ProfessionalTypesRepositoryEloquent $professionalTypesRepository,
         TrainingIntensityRepositoryEloquent $trainingIntensityRepository,
         TrainingFrequencyRepositoryEloquent $trainingFrequencyRepository,
@@ -144,6 +148,7 @@ class AllInOneController extends Controller
         $this->targetedMusclesRepository = $targetedMusclesRepository;
         $this->specializationsRepository = $specializationsRepository;
         $this->trainingActivityRepository = $trainingActivityRepository;
+        $this->trainingProgramActivityRepository = $trainingProgramActivityRepository;
         $this->professionalTypesRepository = $professionalTypesRepository;
         $this->trainingIntensityRepository = $trainingIntensityRepository;
         $this->trainingFrequencyRepository = $trainingFrequencyRepository;
@@ -249,6 +254,9 @@ class AllInOneController extends Controller
 
         /** get training_activity details */
         $allData['training_activity'] = $this->getTrainingActivityDetails();
+
+        /** get training_program_activity details */
+        $allData['training_program_activity'] = $this->getTrainingProgramActivityDetails();
 
         /** get professional_types details */
         $allData['professional_types'] = $this->getProfessionalTypesDetails();
@@ -473,6 +481,21 @@ class AllInOneController extends Controller
     public function getTrainingActivityDetails()
     {
         return $this->trainingActivityRepository->getDetailsByInput(
+            [
+                'sort_by' => ['sequence', 'asc'],
+                'is_active' => true
+            ]
+        );
+    }
+
+    /**
+     * getTrainingProgramActivityDetails => get All Active Training activity
+     *
+     * @return void
+     */
+    public function getTrainingProgramActivityDetails()
+    {
+        return $this->trainingProgramActivityRepository->getDetailsByInput(
             [
                 'sort_by' => ['sequence', 'asc'],
                 'is_active' => true
