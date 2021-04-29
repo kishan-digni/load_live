@@ -156,12 +156,14 @@ class HelperController extends Controller
      */
     public function calculateFirstStepOf_V_DOT($input = null)
     {
-        $data = ($this->DIST / $this->T)
+        if($this->T != 0 && $this->T != null && $this->T != '') {
+            $data = ($this->DIST / $this->T)
             * ($this->DIST / $this->T);
-        $this->VO2 =
-            -4.6 + 0.182258 * ($this->DIST / $this->T) + 0.000104 * ($this->DIST / $this->T) * ($this->DIST / $this->T);
-
-        $this->VO2 = round($this->VO2, 2);
+            $this->VO2 = -4.6 + 0.182258 * ($this->DIST / $this->T) + 0.000104 * ($this->DIST / $this->T) * ($this->DIST / $this->T);
+            $this->VO2 = round($this->VO2, 2);
+        } else {
+            $this->VO2 = 0;
+        }
         // dd('check data', $this->VO2);
     }
 

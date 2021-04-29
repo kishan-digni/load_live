@@ -190,7 +190,7 @@ class CompletedTrainingProgramRepositoryEloquent extends BaseRepository implemen
         } */
         /** End Modified */ 
         if (isset($value)) {
-            $value->cardio_type_activity = $input['cardio_type_activity'];
+            $value->cardio_type_activity_id = $input['cardio_type_activity_id'];
             $value->update($input);
             return $value->fresh();
         }
