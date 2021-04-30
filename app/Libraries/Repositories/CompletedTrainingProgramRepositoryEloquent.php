@@ -77,7 +77,10 @@ class CompletedTrainingProgramRepositoryEloquent extends BaseRepository implemen
         if (isset($input['is_complete'])) {
             $value = $value->where('is_complete', $input['is_complete']);
         }
-
+        /** cardio_type_activity_id wise filter  */
+        if (isset($input['cardio_type_activity_id'])) {
+            $value = $value->where('cardio_type_activity_id', $input['cardio_type_activity_id']);
+        }
         /** date wise records filtering*/
         if (isset($input['start_date'])) {
             $value = $value->where('date', ">=", $input['start_date']);
@@ -190,8 +193,10 @@ class CompletedTrainingProgramRepositoryEloquent extends BaseRepository implemen
         } */
         /** End Modified */ 
         if (isset($value)) {
-            $value->cardio_type_activity_id = $input['cardio_type_activity_id'];
-            $value->update($input);
+            if(isset($input['cardio_type_activity_id'])) {
+                $value->cardio_type_activity_id = $input['cardio_type_activity_id'];
+            }
+            $value->fill($input)->update();
             return $value->fresh();
         }
     }

@@ -5,9 +5,11 @@ namespace App\Http\Controllers\API\v1\Calender;
 use Illuminate\Http\Request;
 use App\Supports\DateConvertor;
 use App\Models\TrainingPrograms;
+use App\Models\CompletedTrainingProgram;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\HelperController;
+use App\Http\Controllers\API\v1\Calender\LogSummary\RunCalculationsController;
 use App\Libraries\Repositories\WorkoutWiseLapRepositoryEloquent;
 use App\Libraries\Repositories\WeekWiseWorkoutRepositoryEloquent;
 use App\Libraries\Repositories\TrainingProgramsRepositoryEloquent;
@@ -464,5 +466,343 @@ class TrainingProgramController1 extends Controller
         } else {
             return $this->sendSuccessResponse(null, "");
         }
+    }
+    public function saveGeneratedCalculationsTrainingProgram(Request $request)
+    {
+       
+        $input = $request->input();
+        $validation = $this->requiredValidation(['id'], $input);
+        if (isset($validation) && $validation['flag'] == false) {
+            return $this->sendBadRequest(null, $validation['message']);
+        }
+
+        # 1 Get Training Log Details
+        $log = $this->completedTrainingProgramRepository->getDetailsByInput(
+            [
+                'id' => $input['id'],
+                'relation' => ['training_program_activity'],
+                'first' => true
+            ]
+        );
+        if (!!!isset($log)) {
+            return $this->sendBadRequest(null, __('validation.common.details_not_found', ['module' => $this->moduleName]));
+        }
+        $log = $log->toArray();
+      
+        /** check if generated calculation exists */
+        if (isset($log['generated_calculations'])) {
+            /** if already updated then required generated_calculations */
+            $validation = $this->requiredValidation(['generated_calculations'], $input);
+            if (isset($validation) && $validation['flag'] == false) {
+                return $this->sendBadRequest(null, $validation['message']);
+            }
+
+            $activityCode = $log['training_program_activity']['code'];
+            if(isset($log['exercise'][0]['updated_duration'])) {
+                $isDuration = $log['exercise'][0]['updated_duration'];
+            }
+            /** generate all new calculation */
+            $generated_calculations = [];
+            $response = $this->getGeneratedCalculationFromByActivity($log, $activityCode);
+            $generated_calculations = array_merge($generated_calculations, $response);
+
+            /** make a new request for replace old data */
+            $storedDuration = $log['generated_calculations']['total_duration']; // TEST
+            $storedDistance = $log['generated_calculations']['total_distance']; // TEST
+            $log['generated_calculations'] = $generated_calculations;
+            $updateRequest = $log['generated_calculations'];
+            $log['generated_calculations']['total_duration'] = $storedDuration; // TEST
+            $log['generated_calculations']['total_distance'] = round($storedDistance, 1); // TEST
+
+            /** working code */
+            $updateRequest['total_duration'] =
+            $this->checkFromGeneratedCalculationByKey($log['generated_calculations'], $input['generated_calculations'], 'total_duration');
+            $durationArr = explode(':', $updateRequest['total_duration']);
+            $durationArr[0] = (int) $durationArr[0];
+            $updateRequest['total_duration'] = implode(':', $durationArr);
+            $updateRequest['total_distance'] =
+            $this->checkFromGeneratedCalculationByKey($log['generated_calculations'], $input['generated_calculations'], 'total_distance');
+            $updateRequest['total_distance'] = round($updateRequest['total_distance'], 1);
+
+            /** convert 01:40 to 1:40 pace */
+            $updateRequest['avg_pace'] =
+            $this->checkFromGeneratedCalculationByKey($log['generated_calculations'], $input['generated_calculations'], 'avg_pace');
+            $paceArr = explode(':', $updateRequest['avg_pace']);
+            $paceArr[0] = (int) $paceArr[0];
+            $updateRequest['avg_pace'] = implode(':', $paceArr);
+            $updateRequest['avg_speed'] =
+            $this->checkFromGeneratedCalculationByKey($log['generated_calculations'], $input['generated_calculations'], 'avg_speed');
+
+            $ActivityCalculationController = $this->getActivityCalculationControllerNameByActivityCode($activityCode);
+            if (isset($input['generated_calculations']['total_duration'])) {
+                /** if user update in total_duration then calculate total_distance */
+                $newSpeedAndPace = $this->generateNewSpeedAndPaceFromDurationAndDistanceViaActivityCodeName($log, $input['generated_calculations']['total_duration']); // OLD
+                // NEW
+                // $newSpeedAndPace = $this->generatePaceSpeedByTotalDistance_divide_by_TotalDuration(
+                //     $log['generated_calculations']['total_distance'],
+                //     $input['generated_calculations']['total_duration']
+                // );
+                /** set new calculated pace and speed value. */
+                $updateRequest['total_duration_minutes'] = $newSpeedAndPace['total_duration_minutes']; // updated duration minutes
+                $updateRequest['avg_pace'] = $newSpeedAndPace['avg_pace'];
+                $paceArr = explode(':', $updateRequest['avg_pace']);
+                $paceArr[0] = (int) $paceArr[0];
+                $updateRequest['avg_pace'] = implode(':', $paceArr);
+                $updateRequest['avg_speed'] = $newSpeedAndPace['avg_speed'];
+            } else if (isset($input['generated_calculations']['total_distance'])) {
+                /** if user update in total_distance then calculate avg_speed OR avg_pace */
+                $newSpeedAndPace = $this->generateNewSpeedAndPaceFromDistanceAndDurationViaActivityCodeName($log, $input['generated_calculations']['total_distance']); // OLD
+                // $newSpeedAndPace = $this->generatePaceSpeedByTotalDistance_divide_by_TotalDuration(
+                //     $input['generated_calculations']['total_distance'],
+                //     $log['generated_calculations']['total_duration'],
+                //     $log['generated_calculations']['total_duration_minutes']
+                // ); // NEW
+
+                /** set new calculated pace and speed value. */
+                $updateRequest['total_duration_minutes'] = $newSpeedAndPace['total_duration_minutes']; // updated duration minutes
+                $updateRequest['avg_pace'] = $newSpeedAndPace['avg_pace'];
+                $paceArr = explode(':', $updateRequest['avg_pace']);
+                $paceArr[0] = (int) $paceArr[0];
+                $updateRequest['avg_pace'] = implode(':', $paceArr);
+                $updateRequest['avg_speed'] = $newSpeedAndPace['avg_speed'];
+                // avg_speed OR avg_pace
+            } else if (isset($input['generated_calculations']['avg_pace'])) {
+                /** if user update in avg_speed then calculate total_duration */
+                $newDuration = $this->generateNewDurationFromDistanceAndPaceViaActivityCodeName($log, $input['generated_calculations']['avg_pace']);
+                /** set new calculated distance value. */
+                $updateRequest['total_duration_minutes'] = $this->convertDurationToMinutes($newDuration);
+                $updateRequest['total_duration'] = $newDuration;
+                $durationArr = explode(':', $updateRequest['total_duration']);
+                $durationArr[0] = (int) $durationArr[0];
+                $updateRequest['total_duration'] = implode(':', $durationArr);
+            } else if (isset($input['generated_calculations']['avg_speed'])) {
+                /** if user update in avg_pace then calculate total_duration */
+                $newDuration = $this->generateNewDurationFromDistanceAndSpeedViaActivityCodeName($log, $input['generated_calculations']['avg_speed']);
+                $updateRequest['total_duration_minutes'] = $this->convertDurationToMinutes($newDuration);
+                $updateRequest['total_duration'] = $newDuration;
+                $durationArr = explode(':', $updateRequest['total_duration']);
+                $durationArr[0] = (int) $durationArr[0];
+                $updateRequest['total_duration'] = implode(':', $durationArr);
+                // total_duration
+            }
+
+            $log['generated_calculations'] = $updateRequest;
+
+            /** store calculated values */
+            $logUpdated = $this->completedTrainingProgramRepository->updateRich(['generated_calculations' => $updateRequest], $log['id']);
+
+            /** check for pase is selected or not */
+            // $is_pace_selected = !!collect($log['exercise'])->whereIn('pace', [null])->pluck('pace')->first();
+            $is_pace_selected = isset($log['exercise'][0], $log['exercise'][0]['pace']) ? true : false;
+            // if ($is_pace_selected == false) {
+            //     $is_pace_selected = !!collect($log['generated_calculations'])->pluck('pace')->first();
+            // }
+
+            $response = [
+                'cardio_type_activity_id' => $log['cardio_type_activity_id'],
+                'generated_calculations' => $updateRequest,
+                'exercise' => $log['exercise'],
+                'is_pace_selected' => $is_pace_selected ?? false,
+            ];
+
+            return $this->sendSuccessResponse($response, __('validation.common.updated', ['module' => $this->moduleName]));
+        } else {
+           
+            # Initial time
+            if (!is_array($log)) {
+                $log = $log->toArray();
+            }
+            $activityCode = $log['training_program_activity']['code'];
+          
+            $generated_calculations = [];
+
+            /** get total_duration, total_distance, avg_speed, and avg_pace from CycleCalculationsController. */
+
+            $response = $this->getGeneratedCalculationFromByActivity($log, $activityCode);
+           
+            $generated_calculations = array_merge($generated_calculations, $response);
+            /** store calculated values */
+            $logUpdated = $this->completedTrainingProgramRepository->updateRich(['generated_calculations' => $generated_calculations], $input['id']);
+            /** return first time generated */
+
+            /** check for pase is selected or not */
+            // $is_pace_selected = !!collect($log['exercise'])->pluck('pace')->first();
+            $is_pace_selected = isset($log['exercise'][0], $log['exercise'][0]['pace']) ? true : false;
+            // if ($is_pace_selected == false) {
+            //     $is_pace_selected = !!collect($log['generated_calculations'])->pluck('pace')->first();
+            // }
+            $response = [
+                'cardio_type_activity_id' => $log['cardio_type_activity_id'],
+                'generated_calculations' => $logUpdated->generated_calculations,
+                'exercise' => $logUpdated->exercise,
+                'is_pace_selected' => $is_pace_selected ?? false,
+            ];
+            return $this->sendSuccessResponse($response, __('validation.common.updated', ['module' => $this->moduleName]));
+        }
+    }
+
+    public function getGeneratedCalculationFromByActivity($trainingLog, $activityCode)
+    {
+        // MAIN
+        $response = [];
+        $isDuration = '';
+        
+        if(isset($trainingLog['exercise'][0]['updated_duration'])) {
+            $isDuration = $trainingLog['exercise'][0]['updated_duration'];
+            $trainingLog['exercise'][0]['duration'] = $trainingLog['exercise'][0]['updated_duration'];
+        }
+        if(isset($trainingLog['exercise'][0]['updated_distance'])) {
+            $trainingLog['exercise'][0]['distance'] = $trainingLog['exercise'][0]['updated_distance'];
+        }
+        
+
+        $ActivityCalculationController = $this->getActivityCalculationControllerNameByActivityCode($activityCode);
+
+        # START Total Duration
+        $calculateDuration = $ActivityCalculationController->calculateDuration(
+            $trainingLog,
+            $isDuration
+        );
+      
+        $response = array_merge($response, $calculateDuration);
+        # END Total Duration
+       
+        # START Total Distance
+        $calculateTotalDistance = $ActivityCalculationController->calculateTotalDistance(
+            $trainingLog,
+            $activityCode,
+            $isDuration
+        );
+        $response = array_merge($response, $calculateTotalDistance);
+        # END Total Distance
+        # START Average Speed (can be either km/hr OR mile/hr, depending on the unit setting)
+        if (method_exists($ActivityCalculationController, 'calculateAverageSpeed')) {
+            $calculateAverageSpeed = $ActivityCalculationController->calculateAverageSpeed(
+                $trainingLog['exercise'],
+                $activityCode,
+                $response['total_distance'],
+                $response['total_duration_minutes']
+            );
+        } else if (method_exists($ActivityCalculationController, 'calculateAverageSpeedPace')) {
+            $calculateAverageSpeed = $ActivityCalculationController->calculateAverageSpeedPace(
+                $trainingLog['exercise'],
+                $response['avg_pace'] ?? 0,
+                $response['total_distance'],
+                $response['total_duration_minutes']
+            );
+        } else {
+            $calculateAverageSpeed = [
+                'avg_speed' => null,
+                'avg_speed_unit' => null,
+                'avg_speed_code' => null,
+            ];
+        }
+        $response = array_merge($response, $calculateAverageSpeed);
+        # END Average Speed (can be either km/hr OR mile/hr, depending on the unit setting)
+
+        # 3. START Average Pace
+        /** check for method exists in thi controller */
+        if (method_exists($ActivityCalculationController, 'calculateAvgPace')) {
+            $calculateAvgPace = $ActivityCalculationController->calculateAvgPace(
+                $trainingLog['exercise'],
+                $response['total_distance'],
+                $response['total_duration_minutes'],
+                $activityCode
+            );
+        } else {
+            $calculateAvgPace = [
+                'avg_pace' => null,
+                'avg_pace_unit' => null,
+                'avg_pace_code' => null,
+            ];
+        }
+        $response = array_merge($response, $calculateAvgPace);
+        # 3. END Average Pace
+
+        return $response;
+    }
+
+    public function getActivityCalculationControllerNameByActivityCode($activityCode)
+    {
+        if($activityCode == TRAINING_PROGRAM_ACTIVITY_CODE_OUTDOOR) {
+            $activityCode = TRAINING_ACTIVITY_CODE_RUN_OUTDOOR;
+        } else {
+            $activityCode = TRAINING_ACTIVITY_CODE_RUN_INDOOR;
+        }
+        if (in_array($activityCode, [TRAINING_ACTIVITY_CODE_RUN_INDOOR, TRAINING_ACTIVITY_CODE_RUN_OUTDOOR])) {
+            return app(RunCalculationsController::class);
+        } else {
+            return app(ResistanceCalculationController::class);
+        }
+    }
+
+    public function checkFromGeneratedCalculationByKey($log_generated_calculations, $input_generated_calculations, $key)
+    {
+        /** set value from input if not in input then from get log */
+        return isset($input_generated_calculations[$key])
+        ? $input_generated_calculations[$key]
+        : (isset($log_generated_calculations[$key])
+            ? $log_generated_calculations[$key]
+            : null);
+    }
+    public function generateNewSpeedAndPaceFromDurationAndDistanceViaActivityCodeName($trainingLog, $newInputtedTotalDuration)
+    {
+        $newDistance = $trainingLog['generated_calculations']['total_distance'] ?? 0;
+
+        $durationMinutes = $this->convertDurationToMinutes($newInputtedTotalDuration);
+
+        // if (in_array($activityCode, [TRAINING_ACTIVITY_CODE_RUN_INDOOR, TRAINING_ACTIVITY_CODE_RUN_OUTDOOR])) {
+        /** Run activity */
+        # Pace = Time / Distance
+        $avgPace = ($newDistance == 0 ? 0 : ($durationMinutes / $newDistance));
+        $avgPace = round($avgPace, 4);
+
+        # Speed = 60 / Pace
+        $avgSpeed = ($avgPace == 0 ? 0 : round((60 / $avgPace), 1));
+
+        $newAvgPace = $this->convertPaceNumberTo_M_S_format($avgPace);
+        // dd(
+        //     'Calculation Pace From Duration Here',
+        //     "durationMinutes " . $durationMinutes,
+        //     "newDistance " . $newDistance,
+        //     " ($durationMinutes / $newDistance) => " .  $avgPace,
+        //     "avgPace " . $avgPace,
+        //     "newAvgPace " . $newAvgPace,
+        //     "avgSpeed " . $avgSpeed
+        // );
+        return [
+            'total_duration_minutes' => $durationMinutes,
+            'avg_pace' => $newAvgPace,
+            'avg_speed' => $avgSpeed,
+        ];
+    }
+    public function generateNewDurationFromDistanceAndPaceViaActivityCodeName($trainingLog, $newInputtedPace)
+    {
+        $newDurationMinutes = 0;
+
+        $avgPace = $newInputtedPace;
+        $activityCode = $trainingLog['training_program_activity']['code'];
+        $distance = $trainingLog['generated_calculations']['total_distance'];
+        $distance = round($distance, 1);
+
+        $paceToSpeedArray = explode(':', $avgPace);
+        $paceToMinutes = ($paceToSpeedArray[0]) + ($paceToSpeedArray[1] / 60);
+        $newSpeed = round((60 / $paceToMinutes), 4);
+        $newDurationMinutes = round((($distance / $newSpeed) * 60), 2);
+
+        return $this->convertDurationMinutesToTimeFormat($newDurationMinutes);
+        // return (gmdate("H:i:s", (($newDurationMinutes ?? 0)  * 60)));
+    }
+    public function generateNewDurationFromDistanceAndSpeedViaActivityCodeName($trainingLog, $newInputtedSpeed)
+    {
+        $activityCode = $trainingLog['training_program_activity']['code'];
+        $distance = $trainingLog['generated_calculations']['total_distance'];
+
+        // if (in_array($activityCode, [TRAINING_ACTIVITY_CODE_RUN_INDOOR, TRAINING_ACTIVITY_CODE_RUN_OUTDOOR])) {
+        // Duration = Distance / Speed
+        $newDurationMinutes = ($distance / $newInputtedSpeed) * 60;
+        // $newDuration = (gmdate("H:i:s", (($duration ?? 0)  * 60)));
+        // }
+        return (gmdate("H:i:s", (($newDurationMinutes ?? 0) * 60)));
     }
 }

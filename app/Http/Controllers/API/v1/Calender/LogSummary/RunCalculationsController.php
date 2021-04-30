@@ -322,7 +322,7 @@ class RunCalculationsController extends Controller
         # Indoor: B, C → D
 
         $avg_speed = 0;
-        $isDuration = $exercises[0]['duration'];
+       // $isDuration = $exercises[0]['duration'];
 
         /** if $totalDurationMinute  is 0 Means *COMPLETE* button clicked */
         $totalDurationMinute = $this->totalDurationMinute(['exercise' => $exercises]);

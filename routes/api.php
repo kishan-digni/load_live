@@ -59,7 +59,7 @@ $router->group([/* 'prefix' => 'api' */], function () use ($router) {
             /* Edit delete flags for cardio and resistance program */
             $router->post('program-flags', "TrainingProgramController1@programFlags");
             $router->post('delete-training-programs', "TrainingProgramController1@deleteTrainingPrograms");
-
+            $router->post('save-generated-calculation-training-program', "TrainingProgramController1@saveGeneratedCalculationsTrainingProgram");
             /** week related apis */
             $router->post('get-weeks-laps', "TrainingProgramController1@store");
 

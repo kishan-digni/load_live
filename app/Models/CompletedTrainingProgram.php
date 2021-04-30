@@ -28,6 +28,7 @@ class CompletedTrainingProgram extends Model
         "date", // date of selected week of program.
         'cardio_type_activity_id',
         'outdoor_route_data',
+        'generated_calculations',
         'start_date', // start date
         'end_date', // end date
     ];
@@ -112,7 +113,17 @@ class CompletedTrainingProgram extends Model
     {
         return $this->attributes['exercise'] = (isset($value)) ? json_decode($value, true) : null; // true for get in array form
     }
-
+    // generated_calculations
+    public function setGeneratedCalculationsAttribute($value)
+    {
+        $this->attributes['generated_calculations'] = json_encode($value);
+    }
+    // generated_calculations
+    public function getGeneratedCalculationsAttribute($value)
+    {
+        return json_decode($value, true); // true for get in array form
+        // return $this->attributes['generated_calculations'] = json_decode($value, true); // true for get in array form
+    }
     /**
      * setIsCompleteAttribute => convert to boolean
      *
