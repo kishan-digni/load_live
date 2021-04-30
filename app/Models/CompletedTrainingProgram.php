@@ -26,6 +26,8 @@ class CompletedTrainingProgram extends Model
         'exercise', // for set daily exercise
         'is_complete', // to check exercise is completed or not
         "date", // date of selected week of program.
+        'cardio_type_activity_id',
+        'outdoor_route_data',
         'start_date', // start date
         'end_date', // end date
     ];
@@ -173,5 +175,10 @@ class CompletedTrainingProgram extends Model
     public function week_wise_workout_detail()
     {
         return $this->hasOne(WeekWiseWorkout::class, 'id', 'week_wise_workout_id');
+    }
+
+    public function training_program_activity()
+    {
+        return $this->hasOne(TrainingProgramActivity::class, 'id', 'cardio_type_activity_id');
     }
 }

@@ -110,6 +110,14 @@ class WeekWiseCompletedPrograms extends Controller
             $dummyInput['program_code'] = $presetTrainingProgram->code;
             $todaysProgramExercise['week_wise_workout_detail']['week_wise_workout_laps_details']
                 = $this->callHelperControllerCalculationNew($todaysProgramExercise, $dummyInput);
+
+            $settingTraining = $this->settingTrainingRepository->getDetailsByInput([
+                'user_id' => \Auth::id(),
+                'list' => ['run_auto_pause'],
+                'first' => true,
+            ]);
+            // if (isset($settingTraining)) {
+            $todaysProgramExercise['run_auto_pause'] = $settingTraining->run_auto_pause ?? true;
             return $this->sendSuccessResponse($todaysProgramExercise, __('validation.common.key_already_exist', ['key' => $this->moduleName]));
         }
 
@@ -225,6 +233,15 @@ class WeekWiseCompletedPrograms extends Controller
             $createdProgram['week_wise_workout_detail']['week_wise_workout_laps_details'] = $weekWiseWorkoutLapsDetails->toArray();
             $createdProgram['week_wise_workout_detail']['week_wise_workout_laps_details'] = $this->callHelperControllerCalculationNew($createdProgram, $dummyInput);
         }
+
+        $settingTraining = $this->settingTrainingRepository->getDetailsByInput([
+            'user_id' => \Auth::id(),
+            'list' => ['run_auto_pause'],
+            'first' => true,
+        ]);
+        // if (isset($settingTraining)) {
+        $createdProgram['run_auto_pause'] = $settingTraining->run_auto_pause ?? true;
+
         return $this->sendSuccessResponse($createdProgram, __('validation.common.saved', ['module' => $this->moduleName]));
     }
 
@@ -254,6 +271,13 @@ class WeekWiseCompletedPrograms extends Controller
 
         # 2. Update Exorcizes
         $updatedProgram = $this->completedTrainingProgramRepository->updateRich($input, $id);
+        $settingTraining = $this->settingTrainingRepository->getDetailsByInput([
+            'user_id' => \Auth::id(),
+            'list' => ['run_auto_pause'],
+            'first' => true,
+        ]);
+        // if (isset($settingTraining)) {
+        $updatedProgram['run_auto_pause'] = $settingTraining->run_auto_pause ?? true;
         return $this->sendSuccessResponse($updatedProgram, __('validation.common.saved', ['module' => $this->moduleName]));
     }
 
