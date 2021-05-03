@@ -50,7 +50,7 @@ $router->group([/* 'prefix' => 'api' */], function () use ($router) {
 
             /** Generate Training Summary Page API */
             $router->post('get-training-log-summary-details', "LogSummary\SummaryCalculationController@generateSummaryDetails");
-
+            $router->post('get-training-program-summary-details', "LogSummary\SummaryCalculationController@generateTrainingProgramSummaryDetails");
             /**
              * training program related routes
              */

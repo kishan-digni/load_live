@@ -128,7 +128,11 @@ class RunCalculationsController extends Controller
          * for example, 2 laps and 1 lap is set to 1% and another lap is set to 3%,
          * we will take an average of that. Meaning (1+3)/2 = 2% 
          */
+        if($trainingLog['exercise'] != '' && $trainingLog['exercise'] != null) {
         $numberOfLaps = count($trainingLog['exercise']);
+        } else {
+            $numberOfLaps = 0;
+        }
         if ($numberOfLaps == 1) {
             $response['inclination'] = round(($trainingLog['exercise'][0]['percentage']), 2);
         } else {
@@ -549,7 +553,11 @@ class RunCalculationsController extends Controller
              * Step 2) Gradient = Total Gradient / Total lap(s)
              */
             $totalGradient = collect($exercises)->sum('percentage');
+            if($exercises != '' && $exercises != null && count($exercises) != 0) { 
             $gradient = $totalGradient / count($exercises);
+            } else {
+                $gradient = 0;
+            }
             $gradient_code = "C";
         }
 
@@ -635,66 +643,66 @@ class RunCalculationsController extends Controller
      */
     public function findTotalDistanceUsingDuration($exercises)
     {
+        if($exercises != '' && $exercises != null) {
+            foreach ($exercises as $key => $exercise) {
 
-        foreach ($exercises as $key => $exercise) {
+                if (isset($exercise['pace'], $exercise['duration'])) {
 
-            if (isset($exercise['pace'], $exercise['duration'])) {
+                    /** convert pace to seconds */
+                    /**
+                     * Step 1 - Convert Pace timing to seconds
+                     * Lap 1 Pace timing to seconds → 6 x 60 = 360
+                     */
+                    $paceToSpeedArray = explode(':', $exercise['pace']);
+                    $paceToSpeed = ($paceToSpeedArray[0] * 60) + $paceToSpeedArray[1];
 
-                /** convert pace to seconds */
-                /** 
-                 * Step 1 - Convert Pace timing to seconds
-                 * Lap 1 Pace timing to seconds → 6 x 60 = 360
-                 */
-                $paceToSpeedArray = explode(':', $exercise['pace']);
-                $paceToSpeed = ($paceToSpeedArray[0] * 60) + $paceToSpeedArray[1];
+                    /**
+                     * Step 2 – Find Speed
+                     * Lap 1 Speed → (60 x 60) / 360 = 10 km/hr
+                     */
+                    $totalSpeed = round(((60 * 60) / $paceToSpeed), 1);
 
-                /**
-                 * Step 2 – Find Speed
-                 * Lap 1 Speed → (60 x 60) / 360 = 10 km/hr
-                 */
-                $totalSpeed = round(((60 * 60) / $paceToSpeed), 1);
+                    /**
+                     * Step 3 – Find Total Duration
+                     * Lap 1 Duration (in hour) → 20 / 60 = 0.3333 (4 decimals place)
+                     * "duration" => "00:20:00"
+                     */
+                    $durationArray = explode(':', $exercise['duration']);
+                    $totalDuration = round(
+                        (int) $durationArray[0]
+                            + ((int) $durationArray[1] / 60)
+                            + ((int) $durationArray[2] / 3600),
+                        4
+                    );
+                    /**
+                     * Step 4 – Find Distance
+                     * Lap 1 Distance → 0.3333 x 10 = 3.333 = 3.30km (2 decimals place)
+                     */
+                    $distanceByDurationPace[] = round(($totalDuration * $totalSpeed), 2);
+                }
+                if (isset($exercise['speed'], $exercise['duration'])) {
+                    /**
+                     * Step 1
+                     * Lap 1 Duration in hour → 20 / 60 = 0.3333 (4 decimals place)
+                     */
+                    $durationArray = explode(':', $exercise['duration']);
 
-                /**
-                 * Step 3 – Find Total Duration
-                 * Lap 1 Duration (in hour) → 20 / 60 = 0.3333 (4 decimals place)
-                 * "duration" => "00:20:00"
-                 */
-                $durationArray = explode(':', $exercise['duration']);
-                $totalDuration = round(
-                    (int) $durationArray[0]
-                        + ((int) $durationArray[1] / 60)
-                        + ((int) $durationArray[2] / 3600),
-                    4
-                );
-                /**
-                 * Step 4 – Find Distance
-                 * Lap 1 Distance → 0.3333 x 10 = 3.333 = 3.30km (2 decimals place)
-                 */
-                $distanceByDurationPace[] = round(($totalDuration * $totalSpeed), 2);
-            }
-            if (isset($exercise['speed'], $exercise['duration'])) {
-                /**
-                 * Step 1
-                 * Lap 1 Duration in hour → 20 / 60 = 0.3333 (4 decimals place)
-                 */
-                $durationArray = explode(':', $exercise['duration']);
+                    $totalDuration = round(
+                        (int) $durationArray[0]
+                            + ((int) $durationArray[1] / 60)
+                            + ((int) $durationArray[2] / 3600),
 
-                $totalDuration = round(
-                    (int) $durationArray[0]
-                        + ((int) $durationArray[1] / 60)
-                        + ((int) $durationArray[2] / 3600),
+                        4
+                    );
 
-                    4
-                );
-
-                /**
-                 * Step 2
-                 * Lap 1 Distance → 0.3333 x 9 = 2.9997 = 3km
-                 */
-                $distanceByDurationSpeed[] = round($totalDuration * ($exercise['speed'] * 1), 4);
+                    /**
+                     * Step 2
+                     * Lap 1 Distance → 0.3333 x 9 = 2.9997 = 3km
+                     */
+                    $distanceByDurationSpeed[] = round($totalDuration * ($exercise['speed'] * 1), 4);
+                }
             }
         }
-
         if (isset($distanceByDurationSpeed)) {
             /** SPEED && DURATION 
              * Step 3 – Find Total Distance for all Laps 
