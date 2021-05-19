@@ -44,7 +44,11 @@ class RunCalculationsController extends Controller
 
         /** set is Duration or not AND It's Activity */
         $activityCode = $trainingLog['training_activity']['code'];
-        $isDuration = $trainingLog['exercise'][0]['duration'];
+        if(isset($trainingLog['exercise'][0]['duration'])) {
+            $isDuration = $trainingLog['exercise'][0]['duration'];
+        } else {
+            $isDuration = 0;
+        }
 
         $response = [];
 
@@ -198,8 +202,8 @@ class RunCalculationsController extends Controller
 
         # Client said remove remove this 30 second condition
         // if (in_array(($totalDurationMinute * 60), range(TRAINING_WORKOUT_STOP_IMMEDIATELY_MIN_SECOND, TRAINING_WORKOUT_STOP_IMMEDIATELY_MAX_SECOND)) ) {
-        $ifDistance = $trainingLog['exercise'][0]['distance'];
-        if ($isCompleteButton && isset($ifDistance)) {
+        $ifDistance = $trainingLog['exercise'][0];
+        if ($isCompleteButton && isset($ifDistance['distance'])) {
             # C) If the user click on the ‘Complete’ button to log the workout, use equation 
             # (If user use ‘Distance’ in the log. Please see Duration Calculation Guide).
             $totalDurationMinute = $this->calculateDurationCalculationGuid($trainingLog['exercise']);

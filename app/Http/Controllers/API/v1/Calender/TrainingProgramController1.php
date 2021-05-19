@@ -654,7 +654,12 @@ class TrainingProgramController1 extends Controller
         if(isset($trainingLog['exercise'][0]['updated_distance'])) {
             $trainingLog['exercise'][0]['distance'] = $trainingLog['exercise'][0]['updated_distance'];
         }
-        
+        if(isset($trainingLog['exercise'][0]['updated_rest'])) {
+            $trainingLog['exercise'][0]['rest'] = $trainingLog['exercise'][0]['updated_rest'];
+        }
+        if(isset($trainingLog['exercise'][0]['updated_percentage'])) {
+            $trainingLog['exercise'][0]['percentage'] = $trainingLog['exercise'][0]['updated_percentage'];
+        }
 
         $ActivityCalculationController = $this->getActivityCalculationControllerNameByActivityCode($activityCode);
 

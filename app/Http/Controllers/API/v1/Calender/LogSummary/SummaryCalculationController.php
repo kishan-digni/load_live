@@ -168,6 +168,12 @@ class SummaryCalculationController extends Controller
         if(isset($trainingLog['exercise'][0]['updated_distance'])) {
             $trainingLog['exercise'][0]['distance'] = $trainingLog['exercise'][0]['updated_distance'];
         }
+        if(isset($trainingLog['exercise'][0]['updated_distance'])) {
+            $trainingLog['exercise'][0]['distance'] = $trainingLog['exercise'][0]['updated_distance'];
+        }
+        if(isset($trainingLog['exercise'][0]['updated_percentage'])) {
+            $trainingLog['exercise'][0]['percentage'] = $trainingLog['exercise'][0]['updated_percentage'];
+        }
         if(isset($trainingLog['training_program_activity'])) {
             $trainingLog['training_activity'] = $trainingLog['training_program_activity'];
         }
