@@ -18,10 +18,11 @@ use App\Libraries\Repositories\CommonProgramsWeeksLapsRepositoryEloquent;
 use App\Libraries\Repositories\WeekWiseFrequencyMasterRepositoryEloquent;
 use App\Libraries\Repositories\CompletedTrainingProgramRepositoryEloquent;
 use App\Libraries\Repositories\SettingTrainingRepositoryEloquent;
+use App\Supports\SummaryCalculationTrait;
 
 class TrainingProgramController1 extends Controller
 {
-    use DateConvertor;
+    use DateConvertor , SummaryCalculationTrait;
 
     protected $moduleName = "Training program";
 

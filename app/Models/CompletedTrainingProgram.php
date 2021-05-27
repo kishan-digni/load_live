@@ -25,6 +25,7 @@ class CompletedTrainingProgram extends Model
         'week_wise_workout_id', // store workout id in this date 
         'exercise', // for set daily exercise
         'is_complete', // to check exercise is completed or not
+        'RPE',
         "date", // date of selected week of program.
         'cardio_type_activity_id',
         'outdoor_route_data',

@@ -83,7 +83,10 @@ class HelperController extends Controller
         $this->calculateFourthStepOf_V_DOT($input, $apiRequest);
 
         # all Calculation Done HERE
-        $oldPace = round($this->TARGET, 2);
+        
+        //$oldPace = round($this->TARGET, 2);
+        //$oldPace = trim(money_format("%=0#2.2n", (float)$this->TARGET));
+        $oldPace =  sprintf('%05.2f', $this->TARGET);
         $input['pace'] = $this->convertPaceSeconds($oldPace);
         // dd('check data', $this->TARGET, $oldPace, $input['pace']);
 
