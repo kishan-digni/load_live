@@ -735,7 +735,7 @@ trait SummaryCalculationTrait
                     # Duration = Distance / Speed
                     # Duration (Lap 1) = 3.5 / 10 = 0.35
                     if(isset($log['distance'])) {
-                        $allDurationArr[] = round($log['distance'] / $Speed, 1);
+                        $allDurationArr[] = round($log['distance'] / $Speed, 2);
                     }
                     if (isset($log['rest'])) {
                         $restArr = explode(':', $log['rest']);

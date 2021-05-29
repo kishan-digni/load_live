@@ -142,6 +142,7 @@ class SummaryCalculationController extends Controller
         $summaryResponse['user_detail'] = $trainingLog['user_detail'] ?? null;
         $summaryResponse['cardio_type_activity_id'] = $trainingLog['cardio_type_activity_id'] ?? null;
         $summaryResponse['RPE'] = $trainingLog['RPE'] ?? null;
+        $summaryResponse['comments'] = $trainingLog['comments'] ?? null;
         //$summaryResponse['training_goal'] = $trainingLog['training_goal'] ?? null;
         //$summaryResponse['training_goal_custom'] = $trainingLog['training_goal_custom'] ?? null;
         //$summaryResponse['training_intensity'] = $trainingLog['training_intensity'] ?? null;

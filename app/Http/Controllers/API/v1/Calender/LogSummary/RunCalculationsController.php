@@ -137,12 +137,12 @@ class RunCalculationsController extends Controller
         } else {
             $numberOfLaps = 0;
         }
-        if ($numberOfLaps == 1) {
+       /*  if ($numberOfLaps == 1) {
             $response['inclination'] = round(($trainingLog['exercise'][0]['percentage']), 2);
-        } else {
+        } else { */
             $svgInclination = collect($trainingLog['exercise'])->avg('percentage');
             $response['inclination'] = round(($svgInclination), 2);
-        }
+        //}
 
         # Start Elevation Gain
         $calculateElevationGain = $this->calculateElevationGain(
