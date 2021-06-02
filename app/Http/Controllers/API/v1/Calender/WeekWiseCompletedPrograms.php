@@ -258,7 +258,7 @@ class WeekWiseCompletedPrograms extends Controller
         $input = $request->all();
 
         # 1. validate exorcizes
-        $validation = $this->requiredValidation(['is_complete'/* , 'exercise' */], $input);
+        $validation = $this->requiredValidation([/* 'is_complete' *//* , 'exercise' */], $input);
         if (isset($validation) && $validation['flag'] === false) {
             return $this->sendBadRequest(null, $validation['message']);
         }

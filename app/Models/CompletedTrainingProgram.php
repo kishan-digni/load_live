@@ -189,6 +189,10 @@ class CompletedTrainingProgram extends Model
     {
         return $this->hasOne(WeekWiseWorkout::class, 'id', 'week_wise_workout_id');
     }
+    public function week_wise_workout_detail1()
+    {
+        return $this->hasOne(WeekWiseWorkout::class, 'id', 'week_wise_workout_id');
+    }
 
     public function training_program_activity()
     {

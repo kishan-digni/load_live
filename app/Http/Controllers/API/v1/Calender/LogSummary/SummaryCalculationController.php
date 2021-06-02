@@ -6,6 +6,7 @@ namespace App\Http\Controllers\API\v1\Calender\LogSummary;
 
 use App\Http\Controllers\Controller;
 use App\Libraries\Repositories\TrainingLogRepositoryEloquent;
+use App\Libraries\Repositories\SettingTrainingRepositoryEloquent;
 use App\Libraries\Repositories\CompletedTrainingProgramRepositoryEloquent;
 use App\Models\CustomCommonLibrariesDetails;
 use App\Supports\SummaryCalculationTrait;
@@ -15,13 +16,16 @@ class SummaryCalculationController extends Controller
 {
     use SummaryCalculationTrait;
     protected $trainingLogRepository;
+    protected $settingTrainingRepository;
     protected $completedTrainingProgramRepository;
 
     public function __construct(
         TrainingLogRepositoryEloquent $trainingLogRepository,
+        SettingTrainingRepositoryEloquent $settingTrainingRepository,
         CompletedTrainingProgramRepositoryEloquent $completedTrainingProgramRepository
     ) {
         $this->trainingLogRepository = $trainingLogRepository;
+        $this->settingTrainingRepository = $settingTrainingRepository;
         $this->completedTrainingProgramRepository = $completedTrainingProgramRepository;
     }
 
@@ -124,7 +128,14 @@ class SummaryCalculationController extends Controller
         $trainingLog = $this->completedTrainingProgramRepository->getDetailsByInput(
             [
                 'id' => $input['id'],
-                'relation' => ['training_program_activity','program_detail' => ['user_detail']],
+                'relation' => [
+                    'training_program_activity',
+                    'program_detail' => ['user_detail'],
+                    'week_wise_workout_detail' => ['training_goal_detail'],
+                    'week_wise_workout_detail1' => ['training_intensity_detail']
+                ],
+                'training_program_activity_list' => ['id', "name", 'code', 'icon_path', 'icon_path_red', 'icon_path_white'],
+                'user_detail_list' => ['id', "name", "photo", 'weight', 'height', 'date_of_birth', 'gender'],
                 'first' => true
             ]
         );
@@ -140,7 +151,10 @@ class SummaryCalculationController extends Controller
         # 2 Get all Information
         $summaryResponse['id'] = $trainingLog['id'];
         $summaryResponse['user_detail'] = $trainingLog['user_detail'] ?? null;
-        $summaryResponse['cardio_type_activity_id'] = $trainingLog['cardio_type_activity_id'] ?? null;
+        //$summaryResponse['cardio_type_activity_id'] = $trainingLog['cardio_type_activity_id'] ?? null;
+        $summaryResponse['training_program_activity'] = $trainingLog['training_program_activity'] ?? null;
+        $summaryResponse['training_intensity'] = $trainingLog['week_wise_workout_detail']['training_intensity_detail'] ?? null;
+        $summaryResponse['training_goal'] = $trainingLog['week_wise_workout_detail']['training_goal_detail'] ?? null;
         $summaryResponse['RPE'] = $trainingLog['RPE'] ?? null;
         $summaryResponse['comments'] = $trainingLog['comments'] ?? null;
         //$summaryResponse['training_goal'] = $trainingLog['training_goal'] ?? null;
@@ -148,14 +162,14 @@ class SummaryCalculationController extends Controller
         //$summaryResponse['training_intensity'] = $trainingLog['training_intensity'] ?? null;
         //$summaryResponse['training_log_style'] = $trainingLog['training_log_style'] ?? null;
         //$summaryResponse['workout_name'] = $trainingLog['workout_name'] ?? null;
-       // $summaryResponse['notes'] = $trainingLog['notes'] ?? null;
+        //$summaryResponse['notes'] = $trainingLog['notes'] ?? null;
         //$summaryResponse['comments'] = $trainingLog['comments'] ?? null;
         $summaryResponse['exercise'] = $trainingLog['exercise'] ?? null;
         $summaryResponse['outdoor_route_data'] = $trainingLog['outdoor_route_data'] ?? null; // To show the map for outdoor only.
         //$summaryResponse['RPE'] = $trainingLog['RPE'] ?? null;
 
         $summaryResponse['date'] = $trainingLog['date'];
-        //$summaryResponse['targeted_hr'] = $trainingLog['targeted_hr'] ?? null;
+        $targeted_hr = $this->calculateCompletedTHR($trainingLog['week_wise_workout_detail']);
 
         # 3 Apply Summary Calculations activity wise ( activity wise different calculations )
         if($activityCode == TRAINING_PROGRAM_ACTIVITY_CODE_OUTDOOR) {
@@ -202,11 +216,55 @@ class SummaryCalculationController extends Controller
             $response['total_duration'] = $total_duration;
             $summaryResponse = array_merge($summaryResponse, $response);
         }
+        $summaryResponse['targeted_hr'] = $targeted_hr['calculated_THR']?? null;
         // dd('check', $summaryResponse, $trainingLog);
         # 4 return all details.
         return $this->sendSuccessResponse($summaryResponse, __('validation.common.details_found', ['module' => "Summary"]));
     }
+    public function calculateCompletedTHR($weekWiseWorkoutDetail)
+    {
+        if (isset($weekWiseWorkoutDetail)) {
 
+            # 1 get hr_max from users setting
+            $userSettingTraining = $this->settingTrainingRepository->getDetailsByInput([
+                'user_id' => $this->userId,
+                'first' => true
+            ]);
+
+            /** if hr_max not found then convert from age */
+            if (isset($userSettingTraining) && isset($userSettingTraining->hr_max)) {
+                $hrMax = $userSettingTraining->hr_max ?? null;
+            } else {
+                /** get user birth date and convert from year */
+
+                /** IOS Calculation.
+                 ** let now = Date().toString(dateFormat: "yyyy")
+                 ** let birthday: String = convertDateFormated(date, format: "dd-MM-yyyy", dateFormat: "yyyy")
+                 ** let age = Int(now)! - Int(birthday)!
+                 * let value = Int(206.9 - (0.67 * Double(age)))
+                 * return "\(value)".replace(target: ".00", withString: "")
+                 */
+
+                $user = Auth::user();
+                $currentYear = $this->getCurrentYear();
+                $dobArray = explode('-', $user->date_of_birth);
+                $birthYear = end($dobArray);
+                $age = (int) $currentYear - (int) $birthYear;
+
+                $hrMax =  (float) (206.9 - (0.67 * (float) ($age)));
+                $hrMax = (string) round($hrMax, 1);
+            }
+            $THR = $weekWiseWorkoutDetail['THR'] ??  null;
+
+            $thrArr = explode('-', $THR);
+            $minTHR = ($thrArr[0] / 100)  * $hrMax;
+            $higTHR = ($thrArr[1]  / 100) * $hrMax;
+
+            // dd('data ', "ID " . \Auth::id(),  $hrMax, "($thrArr[0] / 100)  * $hrMax",   $thrArr, $minTHR, $higTHR);
+            $weekWiseWorkoutDetail['calculated_THR'] = (int) round($minTHR) . " - " . (int) round($higTHR);
+        }
+        return $weekWiseWorkoutDetail;
+    }
     public function generateSummaryDetailsNew(Request $request)
     {
         $input = $request->all();

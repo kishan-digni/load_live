@@ -499,6 +499,11 @@ class TrainingProgramController1 extends Controller
             }
 
             $activityCode = $log['training_program_activity']['code'];
+            if($activityCode == TRAINING_PROGRAM_ACTIVITY_CODE_OUTDOOR) {
+                $activityCode = TRAINING_ACTIVITY_CODE_RUN_OUTDOOR;
+            } else {
+                $activityCode = TRAINING_ACTIVITY_CODE_RUN_INDOOR;
+            }
             if(isset($log['exercise'][0]['updated_duration'])) {
                 $isDuration = $log['exercise'][0]['updated_duration'];
             }
@@ -614,7 +619,11 @@ class TrainingProgramController1 extends Controller
                 $log = $log->toArray();
             }
             $activityCode = $log['training_program_activity']['code'];
-          
+            if($activityCode == TRAINING_PROGRAM_ACTIVITY_CODE_OUTDOOR) {
+                $activityCode = TRAINING_ACTIVITY_CODE_RUN_OUTDOOR;
+            } else {
+                $activityCode = TRAINING_ACTIVITY_CODE_RUN_INDOOR;
+            }
             $generated_calculations = [];
 
             /** get total_duration, total_distance, avg_speed, and avg_pace from CycleCalculationsController. */
