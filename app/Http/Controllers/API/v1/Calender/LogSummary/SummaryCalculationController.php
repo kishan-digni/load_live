@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Libraries\Repositories\TrainingLogRepositoryEloquent;
 use App\Libraries\Repositories\SettingTrainingRepositoryEloquent;
 use App\Libraries\Repositories\CompletedTrainingProgramRepositoryEloquent;
+use App\Http\Controllers\API\v1\Calender\TrainingProgramController1;
 use App\Models\CustomCommonLibrariesDetails;
 use App\Supports\SummaryCalculationTrait;
 use Illuminate\Http\Request;
@@ -144,6 +145,9 @@ class SummaryCalculationController extends Controller
             return $this->sendBadRequest(null, __('validation.common.details_not_found', ['module' => "Training Details"]));
         }
         $trainingLog = $trainingLog->toArray();
+        if($trainingLog['generated_calculations'] == null) {
+            $log = app(TrainingProgramController1::class)->saveGeneratedCalculationsTrainingProgram($request);
+        }
         $activityCode = $trainingLog['training_program_activity']['code'];
         if(isset( $trainingLog['program_detail']['user_detail'])) {
             $trainingLog['user_detail'] = $trainingLog['program_detail']['user_detail'];
@@ -154,19 +158,15 @@ class SummaryCalculationController extends Controller
         //$summaryResponse['cardio_type_activity_id'] = $trainingLog['cardio_type_activity_id'] ?? null;
         $summaryResponse['training_program_activity'] = $trainingLog['training_program_activity'] ?? null;
         $summaryResponse['training_intensity'] = $trainingLog['week_wise_workout_detail']['training_intensity_detail'] ?? null;
-        $summaryResponse['training_goal'] = $trainingLog['week_wise_workout_detail']['training_goal_detail'] ?? null;
         $summaryResponse['RPE'] = $trainingLog['RPE'] ?? null;
         $summaryResponse['comments'] = $trainingLog['comments'] ?? null;
-        //$summaryResponse['training_goal'] = $trainingLog['training_goal'] ?? null;
+        $summaryResponse['training_goal'] = $trainingLog['week_wise_workout_detail']['training_goal_detail'] ?? null;
         //$summaryResponse['training_goal_custom'] = $trainingLog['training_goal_custom'] ?? null;
-        //$summaryResponse['training_intensity'] = $trainingLog['training_intensity'] ?? null;
         //$summaryResponse['training_log_style'] = $trainingLog['training_log_style'] ?? null;
-        //$summaryResponse['workout_name'] = $trainingLog['workout_name'] ?? null;
+        $summaryResponse['workout_name'] = $trainingLog['week_wise_workout_detail']['name'] ?? null;
         //$summaryResponse['notes'] = $trainingLog['notes'] ?? null;
-        //$summaryResponse['comments'] = $trainingLog['comments'] ?? null;
         $summaryResponse['exercise'] = $trainingLog['exercise'] ?? null;
         $summaryResponse['outdoor_route_data'] = $trainingLog['outdoor_route_data'] ?? null; // To show the map for outdoor only.
-        //$summaryResponse['RPE'] = $trainingLog['RPE'] ?? null;
 
         $summaryResponse['date'] = $trainingLog['date'];
         $targeted_hr = $this->calculateCompletedTHR($trainingLog['week_wise_workout_detail']);

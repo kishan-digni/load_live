@@ -820,4 +820,39 @@ class TrainingProgramController1 extends Controller
         // }
         return (gmdate("H:i:s", (($newDurationMinutes ?? 0) * 60)));
     }
+    /**
+     * generateNewSpeedAndPaceFromDistanceAndDurationViaActivityCodeName => Calculate New Speed | Pace
+     *
+     * @param  mixed $trainingLog
+     * @param  mixed $newInputtedDistance
+     * @return void
+     */
+    public function generateNewSpeedAndPaceFromDistanceAndDurationViaActivityCodeName($trainingLog, $newInputtedDistance)
+    {
+        $trainingLog['training_activity'] = $trainingLog['training_program_activity'];
+        $avgSpeed = $trainingLog['generated_calculations']['avg_speed'] ?? 0;
+        $avgPace = $trainingLog['generated_calculations']['avg_pace'] ?? 0;
+        $activityCode = $trainingLog['training_activity']['code'];
+
+        $durationMinutes = $this->convertDurationToMinutes($trainingLog['generated_calculations']['total_duration']);
+
+        /** Run activity */
+        # Pace = Time / Distance
+
+        $avgPace = $newInputtedDistance == 0 ? 0 : ($durationMinutes / $newInputtedDistance);
+
+        # Speed = 60 / Pace
+        $avgSpeed = $avgPace == 0 ? 0 : (60 / $avgPace);
+
+        # Speed = distance / duration (minute)
+        // $avgSpeed = 60 / $avgPace;
+
+        $newAvgPace = $this->convertPaceNumberTo_M_S_format($avgPace);
+
+        return [
+            'avg_pace' => $newAvgPace,
+            'avg_speed' => round($avgSpeed, 1),
+            'total_duration_minutes' => $durationMinutes,
+        ];
+    }
 }

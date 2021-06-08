@@ -265,6 +265,13 @@ class TrainingLogController extends Controller
                     $trainingLogWithExerciseLink[$key]['exercise_link'] = $this->getExerciseLink($value['library_id'], $trainingLog['user_id'], 'custom_library');
                 }
                 $trainingLogWithExerciseLink[$key]['name'] = $value['name'];
+                if($value['common_library_id'] != 0){
+                    $repetition_max  = CustomCommonLibrariesDetails::where('common_libraries_id', $value['common_library_id'])->select('repetition_max')->first();
+                } else {
+                    $repetition_max  = CustomCommonLibrariesDetails::where('user_id', Auth::id())->select('repetition_max')->first();
+                }
+
+                $trainingLogWithExerciseLink[$key]['repetition_max'] = $repetition_max['repetition_max'];
                 $trainingLogWithExerciseLink[$key]['common_library_id'] = $value['common_library_id'];
                 $trainingLogWithExerciseLink[$key]['library_id'] = $value['library_id'];
                 // if ($value['is_completed']) {
@@ -404,14 +411,21 @@ class TrainingLogController extends Controller
 
         foreach($data['training_log_list'] as $key => $training_log_list) {
             if($training_log_list['status'] == 'RESISTANCE') {
-                 $targated_volume = $completed_volume = 0;
-                 $data['training_log_list'][$key]['exercise'] = json_encode($training_log_list['exercise']);
-                 $training_log = json_decode($training_log_list['exercise']);
-                 foreach ($training_log as $key1 => $value) {
-                     $value = (array) $value;
-                     $targated_volume += $this->getTargetedVolume($value['data'], $training_log_list['training_intensity']['name']);
-                     $completed_volume += $this->getCompletedVolume($value['data'], $training_log_list['training_intensity']['name']);
-                 }  
+                $targated_volume = $completed_volume = 0;
+                $data['training_log_list'][$key]['exercise'] = json_encode($training_log_list['exercise']);
+                $training_log = json_decode($training_log_list['exercise']);
+                $training_log_additional_exercise = json_decode($training_log_list['additional_exercise']);
+                if($training_log_list['is_complete']) {
+                    foreach ($training_log_additional_exercise as $key1 => $value) {
+                        $value = (array) $value;
+                        $completed_volume += $this->getCompletedVolumeAdditional($value['data'], $training_log_list['training_intensity']['name']);
+                    }  
+                } else {
+                    foreach ($training_log as $key1 => $value) {
+                        $value = (array) $value;
+                        $completed_volume += $this->getCompletedVolume($value['data'], $training_log_list['training_intensity']['name']);
+                    }  
+                }
                  $data['training_log_list'][$key]['targated_volume'] =  $targated_volume;
                  $data['training_log_list'][$key]['completed_volume'] =  $completed_volume;
                  $data['training_log_list'][$key]['completed_volume_unit'] = $this->total_volume_unit;
@@ -515,7 +529,17 @@ class TrainingLogController extends Controller
         ];
         $trainingLog = $this->trainingLogRepository->getDetailsByInput($returnDetailsRequest);
         $trainingLog = $this->getLogDetailsById($trainingLog->id);
-
+        $exercise =  (array) json_decode($trainingLog);
+        foreach ($exercise['exercise'] as $key => $value) {
+            $value=(array) $value;
+            if($value['common_library_id'] != 0){
+                $repetition_max  = CustomCommonLibrariesDetails::where('common_libraries_id', $value['common_library_id'])->select('repetition_max')->first();
+            } else {
+                $repetition_max  = CustomCommonLibrariesDetails::where('user_id', Auth::id())->select('repetition_max')->first();
+            }
+            $exercise['exercise'][$key]->repetition_max = $repetition_max['repetition_max'];
+        }
+        $trainingLog =  $exercise;
         return $this->sendSuccessResponse($trainingLog, __("validation.common.updated", ["module" => $this->moduleName]));
     }
 
@@ -872,7 +896,14 @@ class TrainingLogController extends Controller
             $new_array[] = $exercise;
         }
         $trainingLog['exercise'] = $new_array;
-        
+        foreach ($trainingLog['exercise'] as $key1 => $value) {
+            if($value['common_library_id'] != 0){
+                $repetition_max  = CustomCommonLibrariesDetails::where('common_libraries_id', $value['common_library_id'])->select('repetition_max')->first();
+            } else {
+                $repetition_max  = CustomCommonLibrariesDetails::where('user_id', Auth::id())->select('repetition_max')->first();
+            }
+            $trainingLog['exercise'][$key1]['repetition_max'] = $repetition_max['repetition_max'];
+        }
         $settingTraining = $this->settingTrainingRepository->getDetailsByInput([
             'user_id' => \Auth::id(),
             'list' => ['run_auto_pause', 'cycle_auto_pause'],
@@ -1215,7 +1246,33 @@ class TrainingLogController extends Controller
         }
         return $grand_total;
     }
-
+    public function getCompletedVolumeAdditional($params,$training_intensity){
+        $grand_total = 0;
+        foreach ($params as $key => $value) {
+            $value = (array) $value;
+            if ($value['reps']!='') {
+                $grand_total += (int)$value['weight'] * (int)$value['reps'];
+            }else{
+                $duration = explode(':',$value['duration']);
+                $minutes = $duration[0] ? $duration[0] : 0;
+                $secs    = $duration[1] ? $duration[1] : 0;
+                $totalSecs   = ($minutes * 60) + $secs; 
+                if ($training_intensity=='Low') {
+                    $grand_total += $totalSecs/4;
+                }elseif ($training_intensity=='Moderately-low') {
+                    $grand_total += $totalSecs/5;
+                }elseif ($training_intensity=='Moderate') {
+                    $grand_total += $totalSecs/6;
+                }elseif ($training_intensity=='Moderately-high') {
+                    $grand_total += $totalSecs/4;
+                }elseif ($training_intensity=='High') {
+                    $grand_total += $totalSecs/2;
+                }
+            }
+        }
+        //dd($grand_total);
+        return $grand_total;
+    }
     public function updateConfirmationTrainingLog($id, Request $request)
     {
         $input = $request->all();
