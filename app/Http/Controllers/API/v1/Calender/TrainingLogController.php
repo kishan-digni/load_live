@@ -430,8 +430,8 @@ class TrainingLogController extends Controller
                  $data['training_log_list'][$key]['completed_volume'] =  $completed_volume;
                  $data['training_log_list'][$key]['completed_volume_unit'] = $this->total_volume_unit;
                  $data['training_log_list'][$key]['targated_volume_unit'] = $this->total_volume_unit;
-             }
-         }
+            }
+        }
         return $this->sendSuccessResponse($data, __('validation.common.details_found', ['module' => "Calender"]));
     }
 

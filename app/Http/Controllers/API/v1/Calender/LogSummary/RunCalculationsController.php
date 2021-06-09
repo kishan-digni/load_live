@@ -46,7 +46,7 @@ class RunCalculationsController extends Controller
         $activityCode = $trainingLog['training_activity']['code'];
         if($activityCode == TRAINING_PROGRAM_ACTIVITY_CODE_OUTDOOR) {
             $activityCode = TRAINING_ACTIVITY_CODE_RUN_OUTDOOR;
-        } else {
+        } elseif($activityCode == TRAINING_PROGRAM_ACTIVITY_CODE_INDOOR) {
             $activityCode = TRAINING_ACTIVITY_CODE_RUN_INDOOR;
         }
         if(isset($trainingLog['exercise'][0]['duration'])) {

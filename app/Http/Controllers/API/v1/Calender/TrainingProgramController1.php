@@ -501,7 +501,7 @@ class TrainingProgramController1 extends Controller
             $activityCode = $log['training_program_activity']['code'];
             if($activityCode == TRAINING_PROGRAM_ACTIVITY_CODE_OUTDOOR) {
                 $activityCode = TRAINING_ACTIVITY_CODE_RUN_OUTDOOR;
-            } else {
+            } elseif($activityCode == TRAINING_PROGRAM_ACTIVITY_CODE_INDOOR) {
                 $activityCode = TRAINING_ACTIVITY_CODE_RUN_INDOOR;
             }
             if(isset($log['exercise'][0]['updated_duration'])) {
@@ -621,7 +621,7 @@ class TrainingProgramController1 extends Controller
             $activityCode = $log['training_program_activity']['code'];
             if($activityCode == TRAINING_PROGRAM_ACTIVITY_CODE_OUTDOOR) {
                 $activityCode = TRAINING_ACTIVITY_CODE_RUN_OUTDOOR;
-            } else {
+            } elseif($activityCode == TRAINING_PROGRAM_ACTIVITY_CODE_INDOOR) {
                 $activityCode = TRAINING_ACTIVITY_CODE_RUN_INDOOR;
             }
             $generated_calculations = [];
@@ -741,7 +741,7 @@ class TrainingProgramController1 extends Controller
     {
         if($activityCode == TRAINING_PROGRAM_ACTIVITY_CODE_OUTDOOR) {
             $activityCode = TRAINING_ACTIVITY_CODE_RUN_OUTDOOR;
-        } else {
+        } elseif($activityCode == TRAINING_PROGRAM_ACTIVITY_CODE_INDOOR) {
             $activityCode = TRAINING_ACTIVITY_CODE_RUN_INDOOR;
         }
         if (in_array($activityCode, [TRAINING_ACTIVITY_CODE_RUN_INDOOR, TRAINING_ACTIVITY_CODE_RUN_OUTDOOR])) {

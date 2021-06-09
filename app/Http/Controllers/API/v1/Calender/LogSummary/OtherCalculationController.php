@@ -329,7 +329,10 @@ class OtherCalculationController extends Controller
         if (!$isCompleteButton && $avg_speed == 0) {
             # B) If the user click on the ‘Start’ button, use phone motion sensor (Accelerometer)
             # (if there is no change in position/ movement)
-            $avg_speed = $total_distance / $total_duration_minutes;
+            $avg_speed = 0;
+            if ($total_duration_minutes>0) {
+                $avg_speed = $total_distance / $total_duration_minutes;
+            }
 
             // $avg_pace = collect($exercises)->whereNotIn('avg_total_pace', ['0', 0, '', null])->pluck('avg_total_pace')->first();
             // if (isset($avg_pace)) {

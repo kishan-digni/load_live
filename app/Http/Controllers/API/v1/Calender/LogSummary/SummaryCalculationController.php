@@ -9,6 +9,7 @@ use App\Libraries\Repositories\TrainingLogRepositoryEloquent;
 use App\Libraries\Repositories\SettingTrainingRepositoryEloquent;
 use App\Libraries\Repositories\CompletedTrainingProgramRepositoryEloquent;
 use App\Http\Controllers\API\v1\Calender\TrainingProgramController1;
+use App\Http\Controllers\API\v1\Calender\TrainingLogController;
 use App\Models\CustomCommonLibrariesDetails;
 use App\Supports\SummaryCalculationTrait;
 use Illuminate\Http\Request;
@@ -52,7 +53,9 @@ class SummaryCalculationController extends Controller
         }
         $trainingLog = $trainingLog->toArray();
         $activityCode = $trainingLog['training_activity']['code'];
-
+        if($trainingLog['generated_calculations'] == null && $trainingLog['status'] == 'CARDIO') {
+            $log = app(TrainingLogController::class)->saveGeneratedCalculations($request);
+        }
         # 2 Get all Information
         $summaryResponse['id'] = $trainingLog['id'];
         $summaryResponse['user_detail'] = $trainingLog['user_detail'] ?? null;
@@ -174,7 +177,7 @@ class SummaryCalculationController extends Controller
         # 3 Apply Summary Calculations activity wise ( activity wise different calculations )
         if($activityCode == TRAINING_PROGRAM_ACTIVITY_CODE_OUTDOOR) {
             $activityCode = TRAINING_ACTIVITY_CODE_RUN_OUTDOOR;
-        } else {
+        } elseif($activityCode == TRAINING_PROGRAM_ACTIVITY_CODE_INDOOR) {
             $activityCode = TRAINING_ACTIVITY_CODE_RUN_INDOOR;
         }
         if(isset($trainingLog['exercise'][0]['updated_duration'])) {
