@@ -77,7 +77,7 @@ class LibraryController extends Controller
                 "search_from" => $input['search_from'] ?? null
             ]);
         }
-       
+    
         $libraries = $this->libraryRepository->getDetails($input);
         // dd('all lub',  $libraries['list']->toArray());
         if (isset($libraries) && $libraries['count'] === 0 && isset($commonLibraries) && $commonLibraries['count'] === 0) {
@@ -103,7 +103,12 @@ class LibraryController extends Controller
 
             $response = [];
             foreach ($getRegions->toArray() as $region) {
-                foreach ($libraries['list'] as $library) {
+                foreach ($libraries['list'] as $key => $library) {
+                    if(isset($library['user_id'])) {
+                        $libraries['list'][$key]['library_id'] = $library['id'];
+                    } else {
+                        $libraries['list'][$key]['common_library_id'] = $library['id'];
+                    }
                     $firstRegionId = $library['regions_ids'][0];
 
                     /** if common from common libraries */

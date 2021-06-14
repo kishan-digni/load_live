@@ -222,7 +222,7 @@ class RunCalculationsController extends Controller
         }
         // }
 
-        $totalDurationMinute = round($totalDurationMinute, 1);
+        $totalDurationMinute = round($totalDurationMinute, 2);
         return [
             'total_duration_minutes' => $totalDurationMinute,
             'total_duration' => $this->convertDurationMinutesToTimeFormat($totalDurationMinute),

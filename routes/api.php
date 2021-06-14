@@ -212,6 +212,9 @@ $router->group([/* 'prefix' => 'api' */], function () use ($router) {
 
             $router->get('all-training-units-list', "SettingController@getAllSettingTrainingUnits");
             $router->get('all-physical-activity-level-list', "SettingController@getAllPhysicalActivityLevels");
+            $router->get('time-under-tention', "SettingController@getTimeUnderTention");
+            $router->post('time-under-tention-update', "SettingController@getTimeUnderTentionUpdate");
+            
         });
 
         /**

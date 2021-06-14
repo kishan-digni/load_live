@@ -13,8 +13,12 @@ use App\Libraries\Repositories\SettingTrainingRepositoryEloquent;
 use App\Libraries\Repositories\SpecializationsRepositoryEloquent;
 use App\Libraries\Repositories\TrainingSettingUnitsRepositoryEloquent;
 use App\Libraries\Repositories\TrainingSettingPhysicalActivityLevelsRepositoryEloquent;
+use App\Libraries\Repositories\TimeUnderTentionMasterRepositoryEloquent;
+use App\Libraries\Repositories\TimeUnderTentionRepositoryEloquent;
 use App\Libraries\Repositories\UsersRepositoryEloquent;
 use App\Models\BillingInformation;
+use App\Models\TimeUnderTentionMaster;
+use App\Models\TimeUnderTention;
 use App\Supports\DateConvertor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -292,5 +296,47 @@ class SettingController extends Controller
             'is_active' => true
         ]);
         return $this->sendSuccessResponse($units, __('validation.common.details_found', ['module' => 'Training Physical Activity Levels']));
+    }
+    public function getTimeUnderTention()
+    {
+        $timeUnderTentionMasterRepositoryEloquent = app(TimeUnderTentionMasterRepositoryEloquent::class);
+        $time_under_tentions =  $timeUnderTentionMasterRepositoryEloquent->getDetailsByInput([
+            'status' => true,
+            'list' => ['id', 'Intensity', 'description', 'Tempo'],
+            'first' => false
+        ]);
+        foreach($time_under_tentions as $key => $time_under_tention) {
+            $user_wise = TimeUnderTention::where('user_id',Auth::id())->where('time_under_tention_id',$time_under_tention['id'])->get()->first();
+            if($user_wise) {
+                $time_under_tentions[$key]['user_updated_tempo'] = $user_wise['Tempo1'].':'.$user_wise['Tempo2'].':'.$user_wise['Tempo3'].':'.$user_wise['Tempo4'];
+            } else {
+                $time_under_tentions[$key]['user_updated_tempo'] = $time_under_tention['Tempo'];
+            }
+        }
+        return $this->sendSuccessResponse($time_under_tentions, __('validation.common.details_found', ['module' => 'Time Under Tention']));
+    }
+    public function getTimeUnderTentionUpdate(Request $request)
+    {
+        $input = $request->all();
+
+        $validation = $this->requiredValidation(['time_under_tention_id'], $input);
+        if (isset($validation) && $validation['flag'] === false) return $this->sendBadRequest(null, $validation['message']);
+        $inputData = [
+            'Tempo1' => $input['tempo1'],
+            'Tempo2' => $input['tempo2'],
+            'Tempo3' => $input['tempo3'],
+            'Tempo4' => $input['tempo4'],
+        ];
+
+        $timeUnderTentionRepositoryEloquent = app(TimeUnderTentionRepositoryEloquent::class);
+        $timeUnderTention =  $timeUnderTentionRepositoryEloquent->updateOrCreate(
+            [
+                'user_id' => Auth::id(),
+                'time_under_tention_id' => $input['time_under_tention_id'],
+            ],
+            $inputData
+        );
+        $timeUnderTention['tempo'] = $timeUnderTention['Tempo1'].':'.$timeUnderTention['Tempo2'].':'.$timeUnderTention['Tempo3'].':'.$timeUnderTention['Tempo4'];
+        return $this->sendSuccessResponse($timeUnderTention, __('validation.common.updated', ['module' => 'Time Under Tention']));
     }
 }

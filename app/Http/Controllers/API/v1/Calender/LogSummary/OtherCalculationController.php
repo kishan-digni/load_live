@@ -209,7 +209,7 @@ class OtherCalculationController extends Controller
         }
 
         return [
-            'total_duration_minutes' => round($totalDurationMinute, 1),
+            'total_duration_minutes' => round($totalDurationMinute, 2),
             'total_duration' => $this->convertDurationMinutesToTimeFormat($totalDurationMinute),
             'total_duration_code' => $totalDurationMinuteCode,
         ];
