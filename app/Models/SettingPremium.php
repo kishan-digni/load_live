@@ -21,6 +21,8 @@ class SettingPremium extends Model
         'language_ids', // language_ids
         'is_auto_topup', // is auto topup
         'auto_topup_amount', // auto topup amount
+        'premium_profile_permission',
+        'feed_permission'
     ];
 
     /**

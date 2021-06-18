@@ -470,7 +470,7 @@ class AllInOneController extends Controller
      */
     public function getSpecializationsDetails()
     {
-        return $this->specializationsRepository->getDetailsByInput(['is_active' => true]);
+        return $this->specializationsRepository->getDetailsByInput(['is_active' => 1]);
     }
 
     /**

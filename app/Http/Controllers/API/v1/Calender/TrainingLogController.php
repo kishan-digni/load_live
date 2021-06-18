@@ -584,8 +584,14 @@ class TrainingLogController extends Controller
         $input = $request->all();
 
         // direct update data from input
+        if(isset($input['exercise'])) {
+            $input['generated_calculations'] = '';
+        }
         $trainingLog = $this->trainingLogRepository->update($input, $id);
-
+        $request->request->add(['id' => $id]); //add request
+        if(isset($input['exercise'])) {
+            $log = $this->saveGeneratedCalculations($request);
+        }
         /** Start
          * Added By : Kishan J Gareja
          * Added Date : 19-Feb-2021

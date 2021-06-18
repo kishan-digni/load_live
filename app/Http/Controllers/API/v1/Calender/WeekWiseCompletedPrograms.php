@@ -271,16 +271,51 @@ class WeekWiseCompletedPrograms extends Controller
 
         # 2. Update Exorcizes
         $updatedProgram = $this->completedTrainingProgramRepository->updateRich($input, $id);
+        if(isset($input['exercise'])) {
+            $log = $this->saveGeneratedCalculationsTrainingProgram($id);
+        }
+        $updatedProgramFinal = $this->completedTrainingProgramRepository->getDetailsByInput(['id' => $id, 'first' => true]);
         $settingTraining = $this->settingTrainingRepository->getDetailsByInput([
             'user_id' => \Auth::id(),
             'list' => ['run_auto_pause'],
             'first' => true,
         ]);
         // if (isset($settingTraining)) {
-        $updatedProgram['run_auto_pause'] = $settingTraining->run_auto_pause ?? true;
-        return $this->sendSuccessResponse($updatedProgram, __('validation.common.saved', ['module' => $this->moduleName]));
+        $updatedProgramFinal['run_auto_pause'] = $settingTraining->run_auto_pause ?? true;
+        return $this->sendSuccessResponse($updatedProgramFinal, __('validation.common.saved', ['module' => $this->moduleName]));
     }
 
+    public function saveGeneratedCalculationsTrainingProgram($id){
+        # 1 Get Training Log Details
+        $log = $this->completedTrainingProgramRepository->getDetailsByInput(
+            [
+                'id' => $id,
+                'relation' => ['training_program_activity'],
+                'first' => true
+            ]
+        );
+        if (!is_array($log)) {
+            $log = $log->toArray();
+        }
+      
+        $activityCode = $log['training_program_activity']['code'];
+        if($activityCode == TRAINING_PROGRAM_ACTIVITY_CODE_OUTDOOR) {
+            $activityCode = TRAINING_ACTIVITY_CODE_RUN_OUTDOOR;
+        } elseif($activityCode == TRAINING_PROGRAM_ACTIVITY_CODE_INDOOR) {
+            $activityCode = TRAINING_ACTIVITY_CODE_RUN_INDOOR;
+        }
+       
+        $generated_calculations = [];
+
+        /** get total_duration, total_distance, avg_speed, and avg_pace from CycleCalculationsController. */
+       
+        $response = app(TrainingProgramController1::class)->getGeneratedCalculationFromByActivity($log, $activityCode);
+        //$response = $this->getGeneratedCalculationFromByActivity($log, $activityCode);
+        $generated_calculations = array_merge($generated_calculations, $response);
+        /** store calculated values */
+        $logUpdated = $this->completedTrainingProgramRepository->updateRich(['generated_calculations' => $generated_calculations], $id);
+        /** return first time generated */
+    }
     /**
      * calculateCompletedTHR => calculated THR from user`s setting with max HR
      *

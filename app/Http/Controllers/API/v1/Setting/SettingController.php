@@ -336,7 +336,11 @@ class SettingController extends Controller
             ],
             $inputData
         );
-        $timeUnderTention['tempo'] = $timeUnderTention['Tempo1'].':'.$timeUnderTention['Tempo2'].':'.$timeUnderTention['Tempo3'].':'.$timeUnderTention['Tempo4'];
+        $TimeUnderTentionMaster = TimeUnderTentionMaster::find($input['time_under_tention_id']);
+        $timeUnderTention['user_updated_tempo'] = $timeUnderTention['Tempo1'].':'.$timeUnderTention['Tempo2'].':'.$timeUnderTention['Tempo3'].':'.$timeUnderTention['Tempo4'];
+        $timeUnderTention['Intensity'] = $TimeUnderTentionMaster['Intensity'];
+        $timeUnderTention['description'] = $TimeUnderTentionMaster['description'];
+        $timeUnderTention['Tempo'] = $TimeUnderTentionMaster['Tempo'];
         return $this->sendSuccessResponse($timeUnderTention, __('validation.common.updated', ['module' => 'Time Under Tention']));
     }
 }

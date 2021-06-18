@@ -504,9 +504,6 @@ class TrainingProgramController1 extends Controller
             } elseif($activityCode == TRAINING_PROGRAM_ACTIVITY_CODE_INDOOR) {
                 $activityCode = TRAINING_ACTIVITY_CODE_RUN_INDOOR;
             }
-            if(isset($log['exercise'][0]['updated_duration'])) {
-                $isDuration = $log['exercise'][0]['updated_duration'];
-            }
             /** generate all new calculation */
             $generated_calculations = [];
             $response = $this->getGeneratedCalculationFromByActivity($log, $activityCode);
@@ -657,18 +654,22 @@ class TrainingProgramController1 extends Controller
         $response = [];
         $isDuration = '';
         
-        if(isset($trainingLog['exercise'][0]['updated_duration'])) {
-            $isDuration = $trainingLog['exercise'][0]['updated_duration'];
-            $trainingLog['exercise'][0]['duration'] = $trainingLog['exercise'][0]['updated_duration'];
-        }
-        if(isset($trainingLog['exercise'][0]['updated_distance'])) {
-            $trainingLog['exercise'][0]['distance'] = $trainingLog['exercise'][0]['updated_distance'];
-        }
-        if(isset($trainingLog['exercise'][0]['updated_rest'])) {
-            $trainingLog['exercise'][0]['rest'] = $trainingLog['exercise'][0]['updated_rest'];
-        }
-        if(isset($trainingLog['exercise'][0]['updated_percentage'])) {
-            $trainingLog['exercise'][0]['percentage'] = $trainingLog['exercise'][0]['updated_percentage'];
+        if(isset($trainingLog['exercise'])){
+            foreach($trainingLog['exercise'] as $key => $exercise) {
+                if(isset($exercise['updated_duration'])) {
+                    $trainingLog['exercise'][$key]['duration'] =  $exercise['updated_duration'];
+                }
+                if(isset($exercise['updated_distance'])) {
+                    $trainingLog['exercise'][$key]['distance'] =  $exercise['updated_distance'];
+                }
+                if(isset($exercise['updated_rest'])) {
+                    $trainingLog['exercise'][$key]['rest'] =  $exercise['updated_rest'];
+                }
+                if(isset($exercise['updated_percentage'])) {
+                    $trainingLog['exercise'][$key]['percentage'] =  $exercise['updated_percentage'];
+                }
+                
+            }
         }
 
         $ActivityCalculationController = $this->getActivityCalculationControllerNameByActivityCode($activityCode);

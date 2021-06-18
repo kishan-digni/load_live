@@ -22,6 +22,11 @@ class TimeUnderTentionMaster extends Model
         'Tempo', // Tempo
     ];
 
+    protected $hidden = [
+        'created_at', 
+        'updated_at', 
+    ];
+
     /**
      * rules => set Validation Rules
      *
@@ -74,7 +79,7 @@ class TimeUnderTentionMaster extends Model
      */
     public function scopeOrdered($query)
     {
-        return $query->orderBy('created_at', 'asc');
+        return $query->orderBy('id', 'asc');
     }
  
 }

@@ -25,6 +25,11 @@ class TimeUnderTention extends Model
         'Tempo4', 
     ];
 
+    protected $hidden = [
+        'created_at', 
+        'updated_at', 
+    ];
+
     /**
      * rules => set Validation Rules
      *

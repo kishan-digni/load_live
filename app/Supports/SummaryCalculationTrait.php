@@ -322,7 +322,6 @@ trait SummaryCalculationTrait
             # Method 1: To find Total Duration
             # If user uses Distance and Speed:
             foreach ($exercises as $key => $log) {
-
                 # Step 1 – Find lap Duration (in hrs)
                 # Duration = Distance / Speed
                 # Duration (Lap 1) = 3.5 / 9 = 0.3889 (4 decimals place)
@@ -1227,15 +1226,18 @@ trait SummaryCalculationTrait
     public function addAllDurationAndRestTimeFromExercise($exercises)
     {
         $totalDurationMinutes = 0;
+       
         if($exercises != '' && $exercises != null) {
             foreach ($exercises as $key => $exercise) {
+                $durationMinute = 0;
+                $restMinute = 0;
                 if(isset($exercise['duration'])) {
                     $durationArray = explode(":", $exercise['duration']);
                     /**
                      * Modified By : Kishan J Gareja
                      * Date : 04-Mar-2021
                      */
-                    $durationMinute = 0;
+                    
                     if ($durationArray[0] != '') {
                         $durationMinute = (
                             ((int) $durationArray[0] * 60) // hour to  minutes
@@ -1247,7 +1249,7 @@ trait SummaryCalculationTrait
                      * End Modified
                      */
                 }
-                $restMinute = 0;
+                
                 if (isset($exercise['rest'])) {
                     $restArray = explode(":", $exercise['rest']);
                     $restMinute = (
