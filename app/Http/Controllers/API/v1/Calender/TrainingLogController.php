@@ -530,6 +530,7 @@ class TrainingLogController extends Controller
         $trainingLog = $this->trainingLogRepository->getDetailsByInput($returnDetailsRequest);
         $trainingLog = $this->getLogDetailsById($trainingLog->id);
         $exercise =  (array) json_decode($trainingLog);
+        $targated_volume = $completed_volume = 0;
         foreach ($exercise['exercise'] as $key => $value) {
             $value=(array) $value;
             if($value['common_library_id'] != 0){
@@ -538,8 +539,16 @@ class TrainingLogController extends Controller
                 $repetition_max  = CustomCommonLibrariesDetails::where('user_id', Auth::id())->select('repetition_max')->first();
             }
             $exercise['exercise'][$key]->repetition_max = $repetition_max['repetition_max'];
+            $targated_volume += $this->getTargetedVolume($value['data'], $trainingLog['training_intensity']['name']);
+            // }
+            $completed_volume += $this->getCompletedVolume($value['data'], $trainingLog['training_intensity']['name']);
         }
         $trainingLog =  $exercise;
+        $trainingLog['targated_volume'] = $targated_volume;
+        $trainingLog['completed_volume'] = $completed_volume;
+        $trainingLog['completed_volume_unit'] = $this->total_volume_unit;
+        $trainingLog['targated_volume_unit'] = $this->total_volume_unit;
+       
         return $this->sendSuccessResponse($trainingLog, __("validation.common.updated", ["module" => $this->moduleName]));
     }
 

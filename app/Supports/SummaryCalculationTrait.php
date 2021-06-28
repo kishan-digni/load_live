@@ -221,7 +221,7 @@ trait SummaryCalculationTrait
                     # Step 4 – Find lap Distance
                     # Distance = Duration x Speed
                     # Distance (Lap 1) = 0.3333 x 10 = 3.333 = 3.30 km (2 decimals place)
-                    $addDistanceArr[] = round(($Duration * $Speed), 1);
+                    $addDistanceArr[] = round(($Duration * $Speed), 2);
                 }
             }
 
@@ -356,14 +356,14 @@ trait SummaryCalculationTrait
         } else if (!$isDuration && $isPace) {
             # Method 2: To find Total Duration
             # If user uses Distance and Pace:
-
+            
             foreach ($exercises as $key => $log) {
                 # Step 1 - Convert Pace to minutes (fraction)
                 # Pace to seconds = mins + (secs  60)
                 # Pace to seconds (Lap 1) = 6 + (0) = 6
                 # Pace to seconds (Lap 2) = 7 + (10  60) = 7.1667
                 $paceArr = explode(':', $log['pace']);
-                $PaceToSeconds = ($paceArr[0]) + ($paceArr[1] * 60);
+                $PaceToSeconds = ($paceArr[0]) + ($paceArr[1] / 60);
 
                 # Step 2 – Find lap Speed
                 # Speed = 60  Step 1
@@ -376,21 +376,21 @@ trait SummaryCalculationTrait
                 # Duration (Lap 1) = (3.5  10) x 60 = 21.0000 (4 decimals place)
                 # Duration (Lap 2) = (4.0  8.37) x 60 = 28.6738 (4 decimals place)
                 if(isset($log['distance'])) {
-                    $Duration = round((($log['distance'] * $Speed) * 60), 4);
+                    $Duration = round((($log['distance'] / $Speed) * 60), 4);
                 }
                 $addDurationArr[] = $Duration;
                 if (isset($log['rest'])) {
                     $restArr = explode(':', $log['rest']);
-                    $addRest[] = ($restArr[0]) + ($restArr[1] / 60);
+                    $addRest[] = ($restArr[0]) + ($restArr[1] * 60);
                 }
             }
 
             # Step 4 – Convert min fraction to time
             # Convert fraction to time (Lap 2) = 0.6738 x 60
-            # = 40.428 = 40 secs (whole number)
+            # = 40.428 = 40 secs (whole number) 
             $TotalDurationHour = round((array_sum($addDurationArr) + array_sum($addRest)), 4);
 
-            $TotalDurationMinutes = $TotalDurationHour * 60;
+            $TotalDurationMinutes  = $TotalDurationHour;
             return $TotalDurationMinutes;
         }
 
