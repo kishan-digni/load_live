@@ -1210,7 +1210,7 @@ class TrainingLogController extends Controller
         foreach ($params as $key => $value) {
             $value = (array) $value;
             if ($value['reps'] != '') {
-                $grand_total += (int) $value['weight'] * (int) $value['reps'];
+                $grand_total += $value['weight'] * $value['reps'];
             } else {
                 $duration = explode(':', $value['duration']);
                 $minutes = $duration[0] ? $duration[0] : 0;
