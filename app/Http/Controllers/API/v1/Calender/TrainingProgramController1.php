@@ -476,7 +476,7 @@ class TrainingProgramController1 extends Controller
         if (isset($validation) && $validation['flag'] == false) {
             return $this->sendBadRequest(null, $validation['message']);
         }
-
+       
         # 1 Get Training Log Details
         $log = $this->completedTrainingProgramRepository->getDetailsByInput(
             [
@@ -492,6 +492,7 @@ class TrainingProgramController1 extends Controller
       
         /** check if generated calculation exists */
         if (isset($log['generated_calculations'])) {
+           
             /** if already updated then required generated_calculations */
             $validation = $this->requiredValidation(['generated_calculations'], $input);
             if (isset($validation) && $validation['flag'] == false) {
@@ -578,6 +579,9 @@ class TrainingProgramController1 extends Controller
                 $durationArr = explode(':', $updateRequest['total_duration']);
                 $durationArr[0] = (int) $durationArr[0];
                 $updateRequest['total_duration'] = implode(':', $durationArr);
+                $total_duration_hour= $this->convertDurationToHours($newDuration);
+                $avg_speed=  round($updateRequest['total_distance']/$total_duration_hour,2);
+                $updateRequest['avg_speed'] =$avg_speed ;
             } else if (isset($input['generated_calculations']['avg_speed'])) {
                 /** if user update in avg_pace then calculate total_duration */
                 $newDuration = $this->generateNewDurationFromDistanceAndSpeedViaActivityCodeName($log, $input['generated_calculations']['avg_speed']);
@@ -586,6 +590,9 @@ class TrainingProgramController1 extends Controller
                 $durationArr = explode(':', $updateRequest['total_duration']);
                 $durationArr[0] = (int) $durationArr[0];
                 $updateRequest['total_duration'] = implode(':', $durationArr);
+                $total_duration_hour= $this->convertDurationToMinutes($newDuration);
+                $avg_pace=  round($total_duration_hour/$updateRequest['total_distance'],2);
+                $updateRequest['avg_pace'] = $this->convertPaceNumberTo_M_S_format($avg_pace) ;
                 // total_duration
             }
 
