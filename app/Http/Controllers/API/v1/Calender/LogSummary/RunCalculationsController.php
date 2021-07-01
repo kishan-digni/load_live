@@ -162,7 +162,8 @@ class RunCalculationsController extends Controller
             $trainingLog['exercise'],
             $activityCode,
             $response['elevation_gain'],
-            $response['total_distance']
+            $response['total_distance'],
+            $trainingLog
         );
         $response = array_merge($response, $calculateGradient);
         # End Gradient (%)
@@ -532,7 +533,7 @@ class RunCalculationsController extends Controller
      * @param  mixed $total_distance
      * @return array
      */
-    public function calculateGradient($exercises, $activityCode, $elevation_gain, $total_distance)
+    public function calculateGradient($exercises, $activityCode, $elevation_gain, $total_distance,$trainingLog = null)
     {
         $gradient = 0;
         $gradient_code = null;
@@ -561,7 +562,19 @@ class RunCalculationsController extends Controller
              * Step 1) Total Gradient = Add all the % value(s) in the training log.
              * Step 2) Gradient = Total Gradient / Total lap(s)
              */
-            $totalGradient = collect($exercises)->sum('percentage');
+            if(isset($trainingLog) && $trainingLog['training_activity']['code'] == TRAINING_PROGRAM_ACTIVITY_CODE_OUTDOOR) {
+                $newexercises = $exercises;
+                foreach($newexercises as $key => $exercis) {
+                    if(isset($exercis['percentage'])) {
+                        $newexercises[$key]['percentage'] = $exercis['percentage'];
+                    } else {
+                        $newexercises[$key]['percentage'] = "1";
+                    }
+                }
+                $totalGradient = collect($newexercises)->sum('percentage');
+            } else {
+                $totalGradient = collect($exercises)->sum('percentage');
+            }
             if($exercises != '' && $exercises != null && count($exercises) != 0) { 
             $gradient = $totalGradient / count($exercises);
             } else {
