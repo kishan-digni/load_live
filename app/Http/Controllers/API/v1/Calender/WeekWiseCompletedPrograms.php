@@ -256,7 +256,7 @@ class WeekWiseCompletedPrograms extends Controller
     public function updateWeekWiseDailyPrograms(Request $request, $id)
     {
         $input = $request->all();
-
+        
         # 1. validate exorcizes
         $validation = $this->requiredValidation([/* 'is_complete' *//* , 'exercise' */], $input);
         if (isset($validation) && $validation['flag'] === false) {

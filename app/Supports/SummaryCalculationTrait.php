@@ -358,18 +358,18 @@ trait SummaryCalculationTrait
             # If user uses Distance and Pace:
             
             foreach ($exercises as $key => $log) {
-                # Step 1 - Convert Pace to minutes (fraction)
+                # Step 1 - Convert Pace to minutes (fraction)(4 decimals place)
                 # Pace to seconds = mins + (secs  60)
                 # Pace to seconds (Lap 1) = 6 + (0) = 6
                 # Pace to seconds (Lap 2) = 7 + (10  60) = 7.1667
                 $paceArr = explode(':', $log['pace']);
-                $PaceToSeconds = ($paceArr[0]) + ($paceArr[1] / 60);
+                $PaceToSeconds = round(($paceArr[0]) + ($paceArr[1] / 60),4);
 
                 # Step 2 – Find lap Speed
                 # Speed = 60  Step 1
-                # Speed (Lap 1) = 60  6 = 10.00 km/hr (2 decimals place)
-                # Speed (Lap 2) = 60  7.1667 = 8.37 km/hr (2 decimals place)
-                $Speed = round((60 / $PaceToSeconds), 2);
+                # Speed (Lap 1) = 60  6 = 10.00 km/hr (1 decimals place)
+                # Speed (Lap 2) = 60  7.1667 = 8.37 km/hr (1 decimals place)
+                $Speed = round((60 / $PaceToSeconds), 1);
 
                 # Step 3 – Find lap Duration (in min fraction)
                 # Duration = (Distance  Speed) x 60
@@ -381,7 +381,7 @@ trait SummaryCalculationTrait
                 $addDurationArr[] = $Duration;
                 if (isset($log['rest'])) {
                     $restArr = explode(':', $log['rest']);
-                    $addRest[] = ($restArr[0]) + ($restArr[1] * 60);
+                    $addRest[] = round(($restArr[0]) + ($restArr[1] / 60),4);
                 }
             }
 

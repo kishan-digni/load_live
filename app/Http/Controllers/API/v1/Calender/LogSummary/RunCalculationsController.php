@@ -223,7 +223,7 @@ class RunCalculationsController extends Controller
         }
         // }
 
-        $totalDurationMinute = round($totalDurationMinute, 2);
+        $totalDurationMinute = $totalDurationMinute;//remove 2 decimal AU
         return [
             'total_duration_minutes' => $totalDurationMinute,
             'total_duration' => $this->convertDurationMinutesToTimeFormat($totalDurationMinute),
