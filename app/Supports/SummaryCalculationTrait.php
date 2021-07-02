@@ -1344,6 +1344,7 @@ trait SummaryCalculationTrait
     {
         $format = "H:i:s";
         $seconds = (($totalDurationMinute ?? 0) * 60);
+        $secArr= explode('.',$seconds);
         $time = (gmdate($format, $seconds));
         $timeArr = explode(':', $time);
         $timeArr[0] = (int) $timeArr[0];

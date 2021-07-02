@@ -35,6 +35,7 @@ use App\Libraries\Repositories\CancellationPolicyRepositoryEloquent;
 use App\Libraries\Repositories\SettingRaceDistanceRepositoryEloquent;
 use App\Libraries\Repositories\CustomTrainingProgramRepositoryEloquent;
 use App\Libraries\Repositories\PresetTrainingProgramRepositoryEloquent;
+use App\Libraries\Repositories\ProfessionalScheduleAdvanceBookingRepositoryEloquent;
 
 class AllInOneController extends Controller
 {
@@ -66,6 +67,7 @@ class AllInOneController extends Controller
     protected $settingRaceDistanceRepository;
     protected $presetTrainingProgramRepository;
     protected $customTrainingProgramRepository;
+    protected $professionalScheduleAdvanceBookingRepository;
 
     /**
      * __construct => Inject all Repos.
@@ -97,6 +99,7 @@ class AllInOneController extends Controller
      * @param SettingRaceDistanceRepositoryEloquent $settingRaceDistanceRepository
      * @param CustomTrainingProgramRepositoryEloquent $customTrainingProgramRepository
      * @param PresetTrainingProgramRepositoryEloquent $presetTrainingProgramRepository
+     * @param ProfessionalScheduleAdvanceBookingRepositoryEloquent $professionalScheduleAdvanceBookingRepository
      */
     public function __construct(
         UsersRepositoryEloquent $usersRepository,
@@ -126,7 +129,8 @@ class AllInOneController extends Controller
         CancellationPolicyRepositoryEloquent $cancellationPolicyRepository,
         SettingRaceDistanceRepositoryEloquent $settingRaceDistanceRepository,
         CustomTrainingProgramRepositoryEloquent $customTrainingProgramRepository,
-        PresetTrainingProgramRepositoryEloquent $presetTrainingProgramRepository
+        PresetTrainingProgramRepositoryEloquent $presetTrainingProgramRepository,
+        ProfessionalScheduleAdvanceBookingRepositoryEloquent $professionalScheduleAdvanceBookingRepository
     ) {
         $this->usersRepository = $usersRepository;
         $this->regionRepository = $regionRepository;
@@ -156,6 +160,7 @@ class AllInOneController extends Controller
         $this->settingRaceDistanceRepository = $settingRaceDistanceRepository;
         $this->presetTrainingProgramRepository = $presetTrainingProgramRepository;
         $this->customTrainingProgramRepository = $customTrainingProgramRepository;
+        $this->professionalScheduleAdvanceBookingRepository = $professionalScheduleAdvanceBookingRepository;
     }
 
     /**
@@ -278,6 +283,9 @@ class AllInOneController extends Controller
 
         /** get resistance preset training */
         $allData['resistance_preset_training_program'] = $this->getResistancePresetTrainingProgram();
+
+        /** get Professional Schedule Advance Booking */
+        $allData['professional_schedule_advance_booking'] = $this->getProfessionalScheduleAdvanceBooking();
 
         /** return final response */
         return $this->sendSuccessResponse($allData, __('validation.common.details_found', ['module' => "All"]));
@@ -571,6 +579,16 @@ class AllInOneController extends Controller
     public function getResistancePresetTrainingProgram()
     {
         return $this->presetTrainingProgramRepository->getDetailsByInput(['status' => TRAINING_PROGRAM_STATUS_RESISTANCE, "type" => TRAINING_PROGRAM_TYPE_PRESET, 'is_active' => true]);
+    }
+
+    /**
+     * getProfessionalScheduleAdvanceBooking => Get All Active Resistance Preset Training Program
+     *
+     * @return void
+     */
+    public function getProfessionalScheduleAdvanceBooking()
+    {
+        return $this->professionalScheduleAdvanceBookingRepository->getDetailsByInput(['is_active' => true]);
     }
 
     /**
