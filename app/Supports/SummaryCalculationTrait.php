@@ -372,19 +372,20 @@ trait SummaryCalculationTrait
                 $Speed = round((60 / $PaceToSeconds), 1);
 
                 # Step 3 – Find lap Duration (in min fraction)
-                # Duration = (Distance  Speed)
-                # Duration (Lap 1) = (3.5  10) = 21.0000 (4 decimals place)
-                # Duration (Lap 2) = (4.0  8.37) = 28.6738 (4 decimals place)
+                # Duration = (Distance  Speed) x 60
+                # Duration (Lap 1) = (3.5  10) x 60 = 21.0000 (4 decimals place)
+                # Duration (Lap 2) = (4.0  8.37) x 60 = 28.6738 (4 decimals place)
                 if(isset($log['distance'])) {
                     $Duration = round(($log['distance'] / $Speed), 4);
                 }
+               
                 $addDurationArr[] = $Duration;
                 if (isset($log['rest'])) {
                     $restArr = explode(':', $log['rest']);
                     $addRest[] = round(($restArr[0]) + ($restArr[1] / 60),4);
                 }
             }
-
+           
             # Step 4 – Convert min fraction to time
             # Convert fraction to time (Lap 2) = 0.6738 x 60
             # = 40.428 = 40 secs (whole number) 
@@ -727,18 +728,20 @@ trait SummaryCalculationTrait
 
                     # Step 2 – Find lap Speed
                     # Speed = 3600 / Pace in seconds
-                    # Speed (Lap 1) = 3600 / 360 = 10.0 km/hr (1 decimal place)
-                    $Speed = round(3600 / $PaceToSeconds, 1);
+                    # Speed (Lap 1) = 3600 / 360 = 10.0 km/hr (2 decimal place)
+                    $Speed = round(3600 / $PaceToSeconds, 2);
 
                     # Step 3 – Find lap Duration (in hr)
                     # Duration = Distance / Speed
                     # Duration (Lap 1) = 3.5 / 10 = 0.35
                     if(isset($log['distance'])) {
-                        $allDurationArr[] = round($log['distance'] / $Speed, 2);
+                        $allDurationArr[] = round($log['distance'] / $Speed, 4);
                     }
                     if (isset($log['rest'])) {
                         $restArr = explode(':', $log['rest']);
-                        $addAllRest[] = ($restArr[0] / 60) + ($restArr[1] / 3600);
+                        $addAllRest[] = ($restArr[0]) + ($restArr[1] / 60);
+                        //$addAllRest[] = ($restArr[0] / 60) + ($restArr[1] / 3600);
+
                     }
                 }
             }
@@ -786,6 +789,7 @@ trait SummaryCalculationTrait
 
         $allDistanceArr = [];
         $allDurationArr = [];
+        $addAllRest =[];
         # Method 1: To find Average Pace
         # If user uses Duration and Speed:
         if ($isDuration && !$isPace) {
@@ -909,7 +913,7 @@ trait SummaryCalculationTrait
 
                     # Step 2 – Find lap Speed
                     # Speed = 3600 / Pace in seconds
-                    $Speed = round((3600 / $PaceToSeconds), 1);
+                    $Speed = round((3600 / $PaceToSeconds), 2);
 
                     # Step 3 – Find lap Duration (in mins)
                     # Duration = (Distance / Speed) x 60
@@ -919,11 +923,21 @@ trait SummaryCalculationTrait
                         $allDurationArr[] = $Duration;
                         $allDistanceArr[] = $log['distance'];
                     }
+
+                    if (isset($log['rest'])) {
+                        $restArr = explode(':', $log['rest']);
+                        $addAllRest[] = ($restArr[0]) + ($restArr[1] / 60);
+                        //$addAllRest[] = ($restArr[0] / 60) + ($restArr[1] / 3600);
+
+                    } 
                 }
             }
             # Step 4 – Find Total Duration – Total Duration should Include ‘Rest’ (if available)
             # Total Duration = (Total Duration in hr x 60) + (Total Duration in mins) + (Total Duration in secs / 60)
-            $TotalDuration = round(array_sum($allDurationArr), 4);
+            $duration = array_sum($allDurationArr);
+            $rest = count($addAllRest) > 1 ? array_sum($addAllRest) : 0;
+            $TotalDuration = round(($duration + $rest), 4);
+            // $TotalDuration = round(array_sum($allDurationArr), 4);
 
             # Step 5 – Find Total Distance
             # Total Distance = (Lap 1 Distance) + (Lap 2 Distance) + (Lap 3 Distance) etc...
@@ -1350,21 +1364,20 @@ trait SummaryCalculationTrait
         // $timeArr[0] = (int) $timeArr[0];
         // $time = implode(':', $timeArr);
         $timeArr=[];
-    
         $secArr= explode('.',$totalDurationMinute);
         $hour=$secArr[0];
         $min = isset($secArr[1])?'0.'.$secArr[1]:'0';
         $min = round((float)$min*60,2);
-       
         $minArr= explode('.',$min);
         $minute= $minArr[0];
         $second = isset($minArr[1])?'0.'.$minArr[1]:'0';
         $second = ceil(round((float)$second*60,1));
-        $timeArr[0]=(int)$hour;
+        $timeArr[0]=($hour>0)?(string)$hour:"0";
+        // $timeArr[1]=sprintf("%02d",0);
+        // $timeArr[2]=sprintf("%02d", (int)$minute);
         $timeArr[1]=sprintf("%02d", (int)$minute);
         $timeArr[2]=sprintf("%02d",(int)$second);
         $time = implode(':', $timeArr);
-
         return $time;
     }
 }

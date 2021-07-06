@@ -595,7 +595,7 @@ class TrainingProgramController1 extends Controller
                 $updateRequest['avg_pace'] = $this->convertPaceNumberTo_M_S_format($avg_pace) ;
                 // total_duration
             }
-
+           
             $log['generated_calculations'] = $updateRequest;
 
             /** store calculated values */
@@ -617,7 +617,7 @@ class TrainingProgramController1 extends Controller
 
             return $this->sendSuccessResponse($response, __('validation.common.updated', ['module' => $this->moduleName]));
         } else {
-           
+          
             # Initial time
             if (!is_array($log)) {
                 $log = $log->toArray();
@@ -810,9 +810,9 @@ class TrainingProgramController1 extends Controller
 
         $paceToSpeedArray = explode(':', $avgPace);
         $paceToMinutes = ($paceToSpeedArray[0]) + ($paceToSpeedArray[1] / 60);
-        $newSpeed = round((60 / $paceToMinutes), 4);
-        $newDurationMinutes = round((($distance / $newSpeed) * 60), 2);
-
+        // $newSpeed = round((60 / $paceToMinutes), 4);
+        // $newDurationMinutes = round((($distance / $newSpeed) * 60), 2);
+        $newDurationMinutes=($paceToMinutes*$distance)/60;
         return $this->convertDurationMinutesToTimeFormat($newDurationMinutes);
         // return (gmdate("H:i:s", (($newDurationMinutes ?? 0)  * 60)));
     }

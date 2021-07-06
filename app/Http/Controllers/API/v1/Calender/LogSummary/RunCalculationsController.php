@@ -441,9 +441,10 @@ class RunCalculationsController extends Controller
             /** told by yash */
             // $avg_speed = $totalDistance / $total_duration_minutes;
             // $avg_pace = 60 / $avg_speed;
-            $avg_pace = $totalDistance == 0 ? 0 : ($total_duration_minutes / $totalDistance);
-            $avg_pace = round($avg_pace, 4);
+            $avg_pace = $totalDistance == 0 ? 0 : ($totalDurationMinute / $totalDistance);
+            // $avg_pace = $totalDistance == 0 ? 0 : ($total_duration_minutes / $totalDistance);
 
+            $avg_pace = round($avg_pace, 4);
             // $avg_pace = collect($exercises)->whereNotIn('avg_total_pace', ['0', 0, '', null])->pluck('avg_total_pace')->first();
             $avg_pace_code = "B";
         }
@@ -455,12 +456,17 @@ class RunCalculationsController extends Controller
 
         if ($isCompleteButton && $avg_pace == 0) {
             # D) If the user click on the ‘Complete’ button to log the workout, 
-            # use equation (Please see Average Pace Calculation Guide).
-            $avg_pace = $this->calculatePaceCalculationGuid(
+                        # use equation (Please see Average Pace Calculation Guide).
+             $avg_pace = $this->calculatePaceCalculationGuid(
                 $exercises,
                 $totalDistance,
-                $total_duration_minutes
+                0
             );
+            // $avg_pace = $this->calculatePaceCalculationGuid(
+            //     $exercises,
+            //     $totalDistance,
+            //     $total_duration_minutes
+            // );
             $avg_pace_code = "D";
         }
 
