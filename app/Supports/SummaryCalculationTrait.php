@@ -372,11 +372,11 @@ trait SummaryCalculationTrait
                 $Speed = round((60 / $PaceToSeconds), 1);
 
                 # Step 3 – Find lap Duration (in min fraction)
-                # Duration = (Distance  Speed) x 60
-                # Duration (Lap 1) = (3.5  10) x 60 = 21.0000 (4 decimals place)
-                # Duration (Lap 2) = (4.0  8.37) x 60 = 28.6738 (4 decimals place)
+                # Duration = (Distance  Speed)
+                # Duration (Lap 1) = (3.5  10) = 21.0000 (4 decimals place)
+                # Duration (Lap 2) = (4.0  8.37) = 28.6738 (4 decimals place)
                 if(isset($log['distance'])) {
-                    $Duration = round((($log['distance'] / $Speed) * 60), 4);
+                    $Duration = round(($log['distance'] / $Speed), 4);
                 }
                 $addDurationArr[] = $Duration;
                 if (isset($log['rest'])) {
@@ -1343,12 +1343,28 @@ trait SummaryCalculationTrait
     public function convertDurationMinutesToTimeFormat($totalDurationMinute)
     {
         $format = "H:i:s";
-        $seconds = (($totalDurationMinute ?? 0) * 60);
-        $secArr= explode('.',$seconds);
-        $time = (gmdate($format, $seconds));
-        $timeArr = explode(':', $time);
-        $timeArr[0] = (int) $timeArr[0];
+        //by vikas
+        // $seconds = (($totalDurationMinute ?? 0) * 60);
+        // $time = (gmdate($format, $seconds));
+        // $timeArr = explode(':', $time);
+        // $timeArr[0] = (int) $timeArr[0];
+        // $time = implode(':', $timeArr);
+        $timeArr=[];
+    
+        $secArr= explode('.',$totalDurationMinute);
+        $hour=$secArr[0];
+        $min = isset($secArr[1])?'0.'.$secArr[1]:'0';
+        $min = round((float)$min*60,2);
+       
+        $minArr= explode('.',$min);
+        $minute= $minArr[0];
+        $second = isset($minArr[1])?'0.'.$minArr[1]:'0';
+        $second = ceil(round((float)$second*60,1));
+        $timeArr[0]=(int)$hour;
+        $timeArr[1]=sprintf("%02d", (int)$minute);
+        $timeArr[2]=sprintf("%02d",(int)$second);
         $time = implode(':', $timeArr);
+
         return $time;
     }
 }
