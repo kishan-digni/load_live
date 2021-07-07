@@ -773,13 +773,13 @@ class TrainingProgramController1 extends Controller
         $newDistance = $trainingLog['generated_calculations']['total_distance'] ?? 0;
 
         $durationMinutes = $this->convertDurationToMinutes($newInputtedTotalDuration);
-
+    
         // if (in_array($activityCode, [TRAINING_ACTIVITY_CODE_RUN_INDOOR, TRAINING_ACTIVITY_CODE_RUN_OUTDOOR])) {
         /** Run activity */
         # Pace = Time / Distance
         $avgPace = ($newDistance == 0 ? 0 : ($durationMinutes / $newDistance));
-        $avgPace = round($avgPace, 4);
-
+        // $avgPace = round($avgPace, 4);
+        $avgPace = round($avgPace, 2);
         # Speed = 60 / Pace
         $avgSpeed = ($avgPace == 0 ? 0 : round((60 / $avgPace), 1));
 

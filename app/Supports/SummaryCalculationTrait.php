@@ -728,14 +728,16 @@ trait SummaryCalculationTrait
 
                     # Step 2 – Find lap Speed
                     # Speed = 3600 / Pace in seconds
-                    # Speed (Lap 1) = 3600 / 360 = 10.0 km/hr (2 decimal place)
-                    $Speed = round(3600 / $PaceToSeconds, 2);
+                    # Speed (Lap 1) = 3600 / 360 = 10.0 km/hr (1 decimal place)
+                    //YASH CHANGE HERE
+                    $Speed = round(3600 / $PaceToSeconds,1);
 
                     # Step 3 – Find lap Duration (in hr)
                     # Duration = Distance / Speed
                     # Duration (Lap 1) = 3.5 / 10 = 0.35
                     if(isset($log['distance'])) {
-                        $allDurationArr[] = round($log['distance'] / $Speed, 4);
+                    //YASH CHANGE HERE
+                        $allDurationArr[] = round($log['distance'] / $Speed, 2);
                     }
                     if (isset($log['rest'])) {
                         $restArr = explode(':', $log['rest']);
@@ -1327,7 +1329,7 @@ trait SummaryCalculationTrait
         $avgPaceArr = explode('.', $pace);
         $floatPace = '0.' . ($avgPaceArr[1] ?? 0);
         $floatPace = $floatPace * 60;
-        $floatPaceArr = explode('.', $floatPace);
+        $floatPace =ceil(round(($floatPace * 60),1));
         $paceFormatted = (in_array($avgPaceArr[0], range(0, 9)) ? $avgPaceArr[0] : $avgPaceArr[0])
             . ':'
             . (in_array($floatPaceArr[0], range(0, 9)) ? '0' . $floatPaceArr[0] : $floatPaceArr[0]);
