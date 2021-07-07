@@ -823,10 +823,11 @@ class TrainingProgramController1 extends Controller
 
         // if (in_array($activityCode, [TRAINING_ACTIVITY_CODE_RUN_INDOOR, TRAINING_ACTIVITY_CODE_RUN_OUTDOOR])) {
         // Duration = Distance / Speed
-        $newDurationMinutes = ($distance / $newInputtedSpeed) * 60;
+        $newDurationMinutes = round(($distance / $newInputtedSpeed),4);
         // $newDuration = (gmdate("H:i:s", (($duration ?? 0)  * 60)));
         // }
-        return (gmdate("H:i:s", (($newDurationMinutes ?? 0) * 60)));
+        // return (gmdate("H:i:s", (($newDurationMinutes ?? 0) * 60)));
+        return $this->convertDurationMinutesToTimeFormat($newDurationMinutes);
     }
     /**
      * generateNewSpeedAndPaceFromDistanceAndDurationViaActivityCodeName => Calculate New Speed | Pace
