@@ -19,7 +19,7 @@ use App\Libraries\Repositories\WeekWiseFrequencyMasterRepositoryEloquent;
 use App\Libraries\Repositories\CompletedTrainingProgramRepositoryEloquent;
 use App\Libraries\Repositories\SettingTrainingRepositoryEloquent;
 use App\Supports\SummaryCalculationTrait;
-
+use DB;
 class TrainingProgramController1 extends Controller
 {
     use DateConvertor , SummaryCalculationTrait;
@@ -166,7 +166,9 @@ class TrainingProgramController1 extends Controller
         if (isset($validation) && $validation['flag'] === false) {
             return $this->sendBadRequest(null, $validation['message']);
         }
-        $deleteTrainingPrograms = $this->trainingProgramsRepository->delete($input['training_program_id']);
+        DB::table('completed_training_programs')->where('program_id',$input['training_program_id'])->where('is_complete',0)->delete();
+        DB::table('training_programs')->where('id',$input['training_program_id'])->delete();
+        //$deleteTrainingPrograms = $this->trainingProgramsRepository->delete($input['training_program_id']);
         return $this->sendSuccessResponse(null, "Training program deleted successfully.");
     }
        /** End Modified */
@@ -580,7 +582,8 @@ class TrainingProgramController1 extends Controller
                 $durationArr[0] = (int) $durationArr[0];
                 $updateRequest['total_duration'] = implode(':', $durationArr);
                 $total_duration_hour= $this->convertDurationToHours($newDuration);
-                $avg_speed=  round($updateRequest['total_distance']/$total_duration_hour,2);
+                    // YASH CHANGE
+                $avg_speed=  round($updateRequest['total_distance']/$total_duration_hour,1);
                 $updateRequest['avg_speed'] =$avg_speed ;
             } else if (isset($input['generated_calculations']['avg_speed'])) {
                 /** if user update in avg_pace then calculate total_duration */
@@ -773,16 +776,16 @@ class TrainingProgramController1 extends Controller
         $newDistance = $trainingLog['generated_calculations']['total_distance'] ?? 0;
 
         $durationMinutes = $this->convertDurationToMinutes($newInputtedTotalDuration);
-    
+
         // if (in_array($activityCode, [TRAINING_ACTIVITY_CODE_RUN_INDOOR, TRAINING_ACTIVITY_CODE_RUN_OUTDOOR])) {
         /** Run activity */
         # Pace = Time / Distance
         $avgPace = ($newDistance == 0 ? 0 : ($durationMinutes / $newDistance));
-        // $avgPace = round($avgPace, 4);
-        $avgPace = round($avgPace, 2);
+        $avgPace = round($avgPace, 4);
+
         # Speed = 60 / Pace
         $avgSpeed = ($avgPace == 0 ? 0 : round((60 / $avgPace), 1));
-
+        
         $newAvgPace = $this->convertPaceNumberTo_M_S_format($avgPace);
         // dd(
         //     'Calculation Pace From Duration Here',
@@ -809,10 +812,11 @@ class TrainingProgramController1 extends Controller
         $distance = round($distance, 1);
 
         $paceToSpeedArray = explode(':', $avgPace);
-        $paceToMinutes = ($paceToSpeedArray[0]) + ($paceToSpeedArray[1] / 60);
+        $paceToMinutes = round(($paceToSpeedArray[0]) + ($paceToSpeedArray[1] / 60),4);
         // $newSpeed = round((60 / $paceToMinutes), 4);
         // $newDurationMinutes = round((($distance / $newSpeed) * 60), 2);
-        $newDurationMinutes=($paceToMinutes*$distance)/60;
+        //YASH CHANGE
+        $newDurationMinutes=round(($paceToMinutes*$distance)/60, 4);//convert to second using divided 60 
         return $this->convertDurationMinutesToTimeFormat($newDurationMinutes);
         // return (gmdate("H:i:s", (($newDurationMinutes ?? 0)  * 60)));
     }
@@ -823,11 +827,18 @@ class TrainingProgramController1 extends Controller
 
         // if (in_array($activityCode, [TRAINING_ACTIVITY_CODE_RUN_INDOOR, TRAINING_ACTIVITY_CODE_RUN_OUTDOOR])) {
         // Duration = Distance / Speed
-        $newDurationMinutes = round(($distance / $newInputtedSpeed),4);
+        
+        //YASH CHANGE
+        $newDurationMinutes = round(($distance / $newInputtedSpeed), 4);
+        //OLD------- $newDurationMinutes = ($distance / $newInputtedSpeed) * 60;
+        
+        
         // $newDuration = (gmdate("H:i:s", (($duration ?? 0)  * 60)));
         // }
-        // return (gmdate("H:i:s", (($newDurationMinutes ?? 0) * 60)));
+        //YASH CHANGE
+        // OLD----------return (gmdate("H:i:s", (($newDurationMinutes ?? 0) * 60)));
         return $this->convertDurationMinutesToTimeFormat($newDurationMinutes);
+
     }
     /**
      * generateNewSpeedAndPaceFromDistanceAndDurationViaActivityCodeName => Calculate New Speed | Pace
