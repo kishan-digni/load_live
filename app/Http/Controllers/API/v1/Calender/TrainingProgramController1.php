@@ -812,7 +812,7 @@ class TrainingProgramController1 extends Controller
         $distance = round($distance, 1);
 
         $paceToSpeedArray = explode(':', $avgPace);
-        $paceToMinutes = round(($paceToSpeedArray[0]) + ($paceToSpeedArray[1] / 60),4);
+        $paceToMinutes = round(($paceToSpeedArray[0]) + ($paceToSpeedArray[1] / 60),2) ;//change 4 to 2 decimal round value;
         // $newSpeed = round((60 / $paceToMinutes), 4);
         // $newDurationMinutes = round((($distance / $newSpeed) * 60), 2);
         //YASH CHANGE
