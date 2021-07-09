@@ -166,12 +166,12 @@ class ProfessionalProfileController extends Controller
         /** get event details  */
         $professionalProfile = $this->professionalProfileRepository->getDetailsByInput(
             [
-                'relation' => ["cancellation_policy_detail", "currency_detail", "payment_option_detail", "user_detail", "professional_type_detail"],
+                'relation' => ["cancellation_policy_detail", "currency_detail", "payment_option_detail", "user_detail" => ['account_detail'], "professional_type_detail"],
                 "cancellation_policy_detail_list" => ["id", "name", "code", "description", "is_active"],
                 "currency_detail_list" => ["id", "name", "code", "is_active"],
                 "payment_option_detail" => ["id", "name", "code", "description", "is_active"],
                 "professional_type_detail" => ["id", "name", "code", "description", "is_active"],
-                "user_detail_list" => ["id", "name", "country_code", "country_id", "latitude", "longitude", "mobile", "gender", "photo", "goal", "user_type", "is_active", "is_profile_complete", 'is_snooze'],
+                "user_detail_list" => ["id", "name", "country_code", "country_id", "latitude", "longitude", "mobile", "gender", "photo", "goal", "user_type", "is_active", "is_profile_complete", 'is_snooze' ],
                 "cancellation_policy_detail_list" => ["id", "name", "code", "description", "is_active"],
                 'id' => $id,
                 'first' => true
