@@ -153,9 +153,10 @@ class SwimmingController extends Controller
             $totalDurationMinute = $this->addAllDurationAndRestTimeFromExercise($trainingLog['exercise']);
             $totalDurationMinuteCode = "D";
         }
+        
         return [
             'total_duration_minutes' => round($totalDurationMinute, 2),
-            'total_duration' => $this->convertDurationMinutesToTimeFormat($totalDurationMinute),
+            'total_duration' => $this->convertDurationMinutesToTimeFormat(round($totalDurationMinute/60,4)),
             'total_duration_code' => $totalDurationMinuteCode,
         ];
     }
@@ -251,7 +252,12 @@ class SwimmingController extends Controller
             # use equation (Please refer to Average Pace Calculation Guide_Swimming).
             $avg_pace = $this->calculatePaceCalculationGuidForSwimming($exercises, $totalDistance, $totalDurationMinute);
             // Convert Average Pace (mins/100m) to Average Speed (m/min) = 100 / Average Pace in fraction
-            $avg_speed = 100 / $avg_pace;
+            if($avg_pace != 0){
+
+                $avg_speed = 100 / $avg_pace;
+            } else {
+                $avg_speed =0;
+            }
             $avg_speed_code = "C";
         }
 

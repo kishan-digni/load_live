@@ -198,6 +198,7 @@ class CycleCalculationsController extends Controller
         # (when user starts the workout log to when the workout log ends).
         $totalDurationMinute = $this->totalDurationMinute($trainingLog);
         $isCompleteButton = (bool) ($totalDurationMinute == 0);
+        // $totalDurationMinute =round($totalDurationMinute/60,4);
         $totalDurationMinuteCode = "A";
 
         # B) Record the Total Duration value recorded from the power meter (if available).
@@ -219,6 +220,7 @@ class CycleCalculationsController extends Controller
             # (If user use ‘Duration’ in the log):
             # Add all the Duration (including Rest) data keyed in the log.
             $totalDurationMinute = $this->addAllDurationAndRestTimeFromExercise($trainingLog['exercise']); // NEW
+            // $totalDurationMinute =round($totalDurationMinute/60,4);
             $totalDurationMinuteCode = "E";
         } else if (
             $isCompleteButton &&
@@ -228,13 +230,15 @@ class CycleCalculationsController extends Controller
         ) {
             # D) If the user click on the 'Complete' button to log the workout, use equation 
             # (If user use ‘Distance’ in the log. Please see Duration Calculation Guide).
-            $totalDurationMinute = $this->calculateDurationCalculationGuid($trainingLog['exercise']);
+            $totalDurationMinute = $this->calculateDurationCalculationGuid($trainingLog['exercise'])*60;  // Multiple with 60 because we got value in hours
+
+            
             $totalDurationMinuteCode = "D";
         }
 
         return [
             'total_duration_minutes' => round($totalDurationMinute, 2),
-            'total_duration' => $this->convertDurationMinutesToTimeFormat($totalDurationMinute),
+            'total_duration' => $this->convertDurationMinutesToTimeFormat(round($totalDurationMinute/60, 4)),
             'total_duration_code' => $totalDurationMinuteCode,
         ];
     }
@@ -249,13 +253,16 @@ class CycleCalculationsController extends Controller
     public function calculateActiveDuration($totalDurationMinute, $deActiveDuration = 0)
     {
         $deActiveDuration = ($deActiveDuration ?? 0) / 60; // to convert into minute
-        $totalDurationMinute = round($totalDurationMinute, 2);
-        $deActiveDuration = round($deActiveDuration, 2);
-        $activeDurationMinute = round(($totalDurationMinute - $deActiveDuration), 2);
+        $totalDurationMinute = round($totalDurationMinute, 4);
+        $deActiveDuration = round($deActiveDuration, 4);
+        $activeDurationMinute = round(($totalDurationMinute - $deActiveDuration), 4);
+
+       // dd('check act', $activeDurationMinute,  $totalDurationMinute, $this->convertDurationMinutesToTimeFormat($activeDurationMinute));
+
 
         return [
             'active_duration_minutes' => $activeDurationMinute,
-            'active_duration' => $this->convertDurationMinutesToTimeFormat($activeDurationMinute)
+            'active_duration' => $this->convertDurationMinutesToTimeFormat($activeDurationMinute/60)
         ];
     }
 
@@ -345,6 +352,7 @@ class CycleCalculationsController extends Controller
             $deActiveDuration = $exercises[0]['deactive_duration']  ?? 0;
             $calculateActiveDuration = $this->calculateActiveDuration($total_duration_minutes, $deActiveDuration);
             $res = array_merge([], $calculateActiveDuration);
+
             $total_duration_minutes =  $res['active_duration_minutes'];
         }
 
@@ -352,6 +360,8 @@ class CycleCalculationsController extends Controller
         # use phone location and motion sensors (GPS + Accelerometer) (only for Outdoor)
         if (!$isCompleteButton && $trainingActivityCode == TRAINING_ACTIVITY_CODE_CYCLE_OUTDOOR) {
             if ($total_duration_minutes != 0 && $total_distance != 0) {
+
+
                 $avg_speed = $total_distance / ($total_duration_minutes / 60); // minute to hr
             }
             // $avg_pace = collect($exercises)->whereNotIn('avg_total_pace', ['0', 0, '', null])->pluck('avg_total_pace')->first();
@@ -361,6 +371,7 @@ class CycleCalculationsController extends Controller
             // }
             $avg_speed_code = "A";
         }
+
 
         if (!$isCompleteButton && $avg_speed == 0) {
             # B) If the user click on the ‘Start’ button, 
@@ -414,7 +425,7 @@ class CycleCalculationsController extends Controller
     public function calculateAvgPace($exercises, $totalDistance, $totalDurationMinute, $activityCode)
     {
         $avg_pace = 0;
-
+        
         $avg_pace = $this->convertPaceNumberTo_M_S_format($avg_pace);
         // "avg pace" End Calculate  -------------------------------------------
         return [

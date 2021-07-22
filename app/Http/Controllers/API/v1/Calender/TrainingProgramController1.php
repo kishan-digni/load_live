@@ -817,7 +817,7 @@ class TrainingProgramController1 extends Controller
         // $newDurationMinutes = round((($distance / $newSpeed) * 60), 2);
         //YASH CHANGE
         $newDurationMinutes=round(($paceToMinutes*$distance)/60, 4);//convert to second using divided 60 
-        $newDurationMinutes=($paceToMinutes*$distance)/60;//convert to second using divided 60 
+         
         return $this->convertDurationMinutesToTimeFormat($newDurationMinutes);
         // return (gmdate("H:i:s", (($newDurationMinutes ?? 0)  * 60)));
     }

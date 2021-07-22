@@ -4,6 +4,7 @@
 
 namespace App\Http\Controllers\API\v1\Calender\LogSummary;
 
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Libraries\Repositories\TrainingLogRepositoryEloquent;
 use App\Libraries\Repositories\SettingTrainingRepositoryEloquent;
@@ -12,11 +13,9 @@ use App\Http\Controllers\API\v1\Calender\TrainingProgramController1;
 use App\Http\Controllers\API\v1\Calender\TrainingLogController;
 use App\Models\CustomCommonLibrariesDetails;
 use App\Supports\SummaryCalculationTrait;
-use Illuminate\Http\Request;
 
 class SummaryCalculationController extends Controller
 {
-    use SummaryCalculationTrait;
     protected $trainingLogRepository;
     protected $settingTrainingRepository;
     protected $completedTrainingProgramRepository;
@@ -37,17 +36,17 @@ class SummaryCalculationController extends Controller
      * @param  mixed $request
      * @return void
      */
-
     public function generateSummaryDetails(Request $request)
     {
         $input = $request->all();
-        $validation = $this->requiredValidation(['id' /* , 'status' */], $input);
+        $validation = $this->requiredValidation(['id'/* , 'status' */], $input);
         if (isset($validation) && $validation['flag'] == false) {
             return $this->sendBadRequest(null, $validation['message']);
         }
 
         # 1 Get Training Log Details
         $trainingLog = $this->getTrainingLogDetails($input['id']);
+        // dd($trainingLog);
         if (!!!isset($trainingLog)) {
             return $this->sendBadRequest(null, __('validation.common.details_not_found', ['module' => "Training Details"]));
         }
@@ -79,41 +78,41 @@ class SummaryCalculationController extends Controller
             /** generate calculations from RunCalculationsController controller and return it. */
             $response = app(RunCalculationsController::class)->generateRunCalculation($trainingLog);
             $summaryResponse = array_merge($summaryResponse, $response);
-
         } elseif (in_array($activityCode, [TRAINING_ACTIVITY_CODE_CYCLE_INDOOR, TRAINING_ACTIVITY_CODE_CYCLE_OUTDOOR])) {
             /** generate calculations from RunCalculationsController controller and return it. */
             $response = app(CycleCalculationsController::class)->generateCalculation($trainingLog, $activityCode);
             $summaryResponse = array_merge($summaryResponse, $response);
-
         } elseif (in_array($activityCode, [TRAINING_ACTIVITY_CODE_SWIMMING])) {
             $response = app(SwimmingController::class)->generateCalculation($trainingLog, $activityCode);
             $summaryResponse = array_merge($summaryResponse, $response);
-
         } else if (in_array($activityCode, [TRAINING_ACTIVITY_CODE_OTHERS])) {
             $response = app(OtherCalculationController::class)->generateCalculation($trainingLog, $activityCode);
-            if ($summaryResponse['exercise'][0]['speed'] != '') {
+            if($summaryResponse['exercise'][0]['speed']!=''){
                 $response['avg_pace_unit'] = 'min/km';
             }
-            if ($summaryResponse['exercise'][0]['pace'] != '') {
+            if($summaryResponse['exercise'][0]['pace']!=''){
                 $response['avg_speed_unit'] = 'm/min';
                 $response['avg_pace_unit'] = 'min/500m';
             }
             $summaryResponse = array_merge($summaryResponse, $response);
         } else {
+            
             /** Else Means no Activity ( RESiSTANCE TRAINING LOG )*/
             // $response = app(ResistanceCalculationController::class)->generateCalculation($trainingLog, $activityCode);
             $response = app(ResistanceCalculationController::class)->generateCalculationForResistance($trainingLog, $activityCode);
             $response['additional_exercise'] = json_decode($response['additional_exercise']);
             // Convert 00:00:08 to 0:00:08
             $total_duration = explode(":", json_decode($response['total_duration']));
-            if ($total_duration[0] == '00') {
-                $first_char = 0;
-            } else {
-                $first_char = $total_duration[0];
-            }
-            $total_duration = $first_char . ':' . $total_duration[1] . ':' . $total_duration[2];
+            
+            if ($total_duration[0]=='00') {
+            	$first_char = 0;
+            }else{
+            	$first_char = $total_duration[0];
+            }            
+            $total_duration = $first_char.':'.$total_duration[1].':'.$total_duration[2];
             // End
             $response['total_duration'] = $total_duration;
+            
             $summaryResponse = array_merge($summaryResponse, $response);
         }
         // dd('check', $summaryResponse, $trainingLog);
@@ -122,6 +121,8 @@ class SummaryCalculationController extends Controller
     }
     public function generateTrainingProgramSummaryDetails(Request $request)
     {
+
+        
         $input = $request->all();
         $validation = $this->requiredValidation(['id' /* , 'status' */], $input);
         if (isset($validation) && $validation['flag'] == false) {
@@ -143,7 +144,7 @@ class SummaryCalculationController extends Controller
                 'first' => true
             ]
         );
-       
+      
         if (!!!isset($trainingLog)) {
             return $this->sendBadRequest(null, __('validation.common.details_not_found', ['module' => "Training Details"]));
         }
@@ -151,19 +152,21 @@ class SummaryCalculationController extends Controller
         if($trainingLog['generated_calculations'] == null) {
             $log = app(TrainingProgramController1::class)->saveGeneratedCalculationsTrainingProgram($request);
         }
+       
         $activityCode = $trainingLog['training_program_activity']['code'];
         if(isset( $trainingLog['program_detail']['user_detail'])) {
             $trainingLog['user_detail'] = $trainingLog['program_detail']['user_detail'];
         }
+       
         # 2 Get all Information
         $summaryResponse['id'] = $trainingLog['id'];
         $summaryResponse['user_detail'] = $trainingLog['user_detail'] ?? null;
         //$summaryResponse['cardio_type_activity_id'] = $trainingLog['cardio_type_activity_id'] ?? null;
         $summaryResponse['training_program_activity'] = $trainingLog['training_program_activity'] ?? null;
-        $summaryResponse['training_intensity'] = $trainingLog['week_wise_workout_detail']['training_intensity_detail'] ?? null;
+        $summaryResponse['training_intensity'] = $trainingLog['week_wise_workout_detail1']['training_intensity_detail'] ?? null;
+        $summaryResponse['training_goal'] = $trainingLog['week_wise_workout_detail']['training_goal_detail'] ?? null;
         $summaryResponse['RPE'] = $trainingLog['RPE'] ?? null;
         $summaryResponse['comments'] = $trainingLog['comments'] ?? null;
-        $summaryResponse['training_goal'] = $trainingLog['week_wise_workout_detail']['training_goal_detail'] ?? null;
         //$summaryResponse['training_goal_custom'] = $trainingLog['training_goal_custom'] ?? null;
         //$summaryResponse['training_log_style'] = $trainingLog['training_log_style'] ?? null;
         $summaryResponse['workout_name'] = $trainingLog['week_wise_workout_detail']['name'] ?? null;
@@ -172,7 +175,7 @@ class SummaryCalculationController extends Controller
         $summaryResponse['outdoor_route_data'] = $trainingLog['outdoor_route_data'] ?? null; // To show the map for outdoor only.
 
         $summaryResponse['date'] = $trainingLog['date'];
-        $targeted_hr = $this->calculateCompletedTHR($trainingLog['week_wise_workout_detail']);
+       
 
         # 3 Apply Summary Calculations activity wise ( activity wise different calculations )
         if($activityCode == TRAINING_PROGRAM_ACTIVITY_CODE_OUTDOOR) {
@@ -200,13 +203,16 @@ class SummaryCalculationController extends Controller
         if(isset($trainingLog['training_program_activity'])) {
             $trainingLog['training_activity'] = $trainingLog['training_program_activity'];
         }
+       
         if (in_array($activityCode, [TRAINING_ACTIVITY_CODE_RUN_INDOOR, TRAINING_ACTIVITY_CODE_RUN_OUTDOOR])) {
+           // dd($trainingLog);
             /** generate calculations from RunCalculationsController controller and return it. */
             $response = app(RunCalculationsController::class)->generateRunCalculation($trainingLog);
-           
+            
             $summaryResponse = array_merge($summaryResponse, $response);
-
+            
         } else {
+           
             /** Else Means no Activity ( RESiSTANCE TRAINING LOG )*/
             // $response = app(ResistanceCalculationController::class)->generateCalculation($trainingLog, $activityCode);
             $response = app(ResistanceCalculationController::class)->generateCalculationForResistance($trainingLog, $activityCode);
@@ -223,18 +229,24 @@ class SummaryCalculationController extends Controller
             $response['total_duration'] = $total_duration;
             $summaryResponse = array_merge($summaryResponse, $response);
         }
+      
+        $targeted_hr = $this->calculateCompletedTHR($trainingLog['week_wise_workout_detail']);
         $summaryResponse['targeted_hr'] = $targeted_hr['calculated_THR']?? null;
         // dd('check', $summaryResponse, $trainingLog);
         # 4 return all details.
+        
         return $this->sendSuccessResponse($summaryResponse, __('validation.common.details_found', ['module' => "Summary"]));
     }
+/**
+ * Not In Use
+ */
     public function calculateCompletedTHR($weekWiseWorkoutDetail)
     {
         if (isset($weekWiseWorkoutDetail)) {
 
             # 1 get hr_max from users setting
             $userSettingTraining = $this->settingTrainingRepository->getDetailsByInput([
-                'user_id' => $this->userId,
+                'user_id' => \Auth::id(),
                 'first' => true
             ]);
 
@@ -272,10 +284,10 @@ class SummaryCalculationController extends Controller
         }
         return $weekWiseWorkoutDetail;
     }
-    public function generateSummaryDetailsNew(Request $request)
+    public function generateSummaryDetailsNewTest(Request $request)
     {
         $input = $request->all();
-        $validation = $this->requiredValidation(['id' /* , 'status' */], $input);
+        $validation = $this->requiredValidation(['id'/* , 'status' */], $input);
         if (isset($validation) && $validation['flag'] == false) {
             return $this->sendBadRequest(null, $validation['message']);
         }
@@ -290,6 +302,7 @@ class SummaryCalculationController extends Controller
         if ($trainingLog['status'] == 'RESISTANCE') {
             $trainingLogWithExerciseLink = array();
             $targated_volume = $completed_volume = 0;
+            
             foreach ($trainingLog['exercise'] as $key => $value) {
                 $trainingLogWithExerciseLink[$key]['data'] = $value['data'];
                 $trainingLogWithExerciseLink[$key]['is_completed'] = $value['is_completed'];
@@ -353,10 +366,10 @@ class SummaryCalculationController extends Controller
             $summaryResponse = array_merge($summaryResponse, $response);
         } else if (in_array($activityCode, [TRAINING_ACTIVITY_CODE_OTHERS])) {
             $response = app(OtherCalculationController::class)->generateCalculation($trainingLog, $activityCode);
-            if ($summaryResponse['exercise'][0]['speed'] != '') {
+            if($summaryResponse['exercise'][0]['speed']!=''){
                 $response['avg_pace_unit'] = 'min/km';
             }
-            if ($summaryResponse['exercise'][0]['pace'] != '') {
+            if($summaryResponse['exercise'][0]['pace']!=''){
                 $response['avg_speed_unit'] = 'm/min';
                 $response['avg_pace_unit'] = 'min/500m';
             }
@@ -446,12 +459,12 @@ class SummaryCalculationController extends Controller
             'training_log_style_list' => ['id', "name", 'code', 'mets'],
             'user_detail_list' => ['id', "name", "photo", 'weight', 'height', 'date_of_birth', 'gender'],
             // "is_complete" => $is_completed,
-            'first' => true,
+            'first' => true
         ];
-        /* if ($is_completed == true) {
-        $logRequest['is_complete'] = $is_completed;
-        } */
-        return $this->trainingLogRepository->getDetailsByInput($logRequest);
+       /* if ($is_completed == true) {
+            $logRequest['is_complete'] = $is_completed;
+        }*/
+        return  $this->trainingLogRepository->getDetailsByInput($logRequest);
         // return $trainingLog;
     }
 }
